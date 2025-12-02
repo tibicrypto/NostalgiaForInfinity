@@ -791,7 +791,7 @@ class NostalgiaForInfinityX7(IStrategy):
 
   # BearRider (9201) configuration and hyperopt parameters
   # Phase flags
-  bearrider_phase2_enable = CategoricalParameter([True, False], default=True, space="buy", optimize=True)
+  bearrider_phase2_enable = CategoricalParameter([True, False], default=True, space="sell", optimize=True)
 
   # Stop thresholds (will be used by the system-level stop logic)
   stop_threshold_bearrider_spot = 0.15
@@ -806,32 +806,31 @@ class NostalgiaForInfinityX7(IStrategy):
   short_bearrider_mode_name = "short_bearrider"
 
   # Hyperopt / signal tuning defaults for 9201 (can be overridden via config)
-  short_condition_9201_adx_min = IntParameter(20, 35, default=25, space="buy", optimize=True)
-  short_condition_9201_adx_max = IntParameter(50, 80, default=70, space="buy", optimize=True)
-  short_condition_9201_minus_di_min = IntParameter(20, 35, default=25, space="buy", optimize=True)
-  short_condition_9201_mfi_max = IntParameter(30, 50, default=40, space="buy", optimize=True)
-  short_condition_9201_rsi_1h_min = IntParameter(15, 30, default=20, space="buy", optimize=True)
-  short_condition_9201_rsi_1h_max = IntParameter(45, 60, default=50, space="buy", optimize=True)
-  short_condition_9201_volume_factor = DecimalParameter(0.8, 1.5, default=1.0, decimals=1, space="buy", optimize=True)
-  short_condition_9201_ema_ribbon_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
-  short_condition_9201_1h_confirmation_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
+  short_condition_9201_adx_min = IntParameter(20, 35, default=25, space="sell", optimize=True)
+  short_condition_9201_adx_max = IntParameter(50, 80, default=70, space="sell", optimize=True)
+  short_condition_9201_minus_di_min = IntParameter(20, 35, default=25, space="sell", optimize=True)
+  short_condition_9201_mfi_max = IntParameter(30, 50, default=40, space="sell", optimize=True)
+  short_condition_9201_rsi_1h_min = IntParameter(15, 30, default=20, space="sell", optimize=True)
+  short_condition_9201_rsi_1h_max = IntParameter(45, 60, default=50, space="sell", optimize=True)
+  short_condition_9201_volume_factor = DecimalParameter(0.8, 1.5, default=1.0, decimals=1, space="sell", optimize=True)
+  short_condition_9201_ema_ribbon_enable = CategoricalParameter([0, 1], default=1, space="sell", optimize=True)
+  short_condition_9201_1h_confirmation_enable = CategoricalParameter([0, 1], default=1, space="sell", optimize=True)
 
   # Phase1 advanced
-  short_condition_9201_atr_min = DecimalParameter(0.8, 2.5, default=1.5, decimals=1, space="buy", optimize=True)
-  short_condition_9201_bb_width_min = DecimalParameter(2.0, 5.0, default=3.0, decimals=1, space="buy", optimize=True)
-  short_condition_9201_adx_slope_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
-  short_condition_9201_supertrend_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
-  short_condition_9201_obv_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
-  short_condition_9201_stochrsi_min = IntParameter(40, 70, default=50, space="buy", optimize=True)
-  short_condition_9201_willr_min = IntParameter(-40, -10, default=-20, space="buy", optimize=True)
-  short_condition_9201_willr_max = IntParameter(-90, -70, default=-80, space="buy", optimize=True)
-  short_condition_9201_vwap_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
-  short_condition_9201_volume_relative_min = DecimalParameter(1.0, 2.0, default=1.2, decimals=1, space="buy", optimize=True)
-  short_condition_9201_roc_max = IntParameter(-5, 0, default=-1, space="buy", optimize=True)
-  short_condition_9201_cmo_max = IntParameter(-20, -5, default=-10, space="buy", optimize=True)
-
+  short_condition_9201_atr_min = DecimalParameter(0.8, 2.5, default=1.5, decimals=1, space="sell", optimize=True)
+  short_condition_9201_bb_width_min = DecimalParameter(2.0, 5.0, default=3.0, decimals=1, space="sell", optimize=True)
+  short_condition_9201_adx_slope_enable = CategoricalParameter([0, 1], default=1, space="sell", optimize=True)
+  short_condition_9201_supertrend_enable = CategoricalParameter([0, 1], default=1, space="sell", optimize=True)
+  short_condition_9201_obv_enable = CategoricalParameter([0, 1], default=1, space="sell", optimize=True)
+  short_condition_9201_stochrsi_min = IntParameter(40, 70, default=50, space="sell", optimize=True)
+  short_condition_9201_willr_min = IntParameter(-40, -10, default=-20, space="sell", optimize=True)
+  short_condition_9201_willr_max = IntParameter(-90, -70, default=-80, space="sell", optimize=True)
+  short_condition_9201_vwap_enable = CategoricalParameter([0, 1], default=1, space="sell", optimize=True)
+  short_condition_9201_volume_relative_min = DecimalParameter(1.0, 2.0, default=1.2, decimals=1, space="sell", optimize=True)
+  short_condition_9201_roc_max = IntParameter(-5, 0, default=-1, space="sell", optimize=True)
+  short_condition_9201_cmo_max = IntParameter(-20, -5, default=-10, space="sell", optimize=True)
   # Phase2 regime detection
-  bearrider_regime_volatility_threshold = DecimalParameter(0.8, 2.5, default=1.2, decimals=1, space="buy", optimize=True)
+  bearrider_regime_volatility_threshold = DecimalParameter(0.8, 2.5, default=1.2, decimals=1, space="sell", optimize=True)
 
   #############################################################
   # CACHES
