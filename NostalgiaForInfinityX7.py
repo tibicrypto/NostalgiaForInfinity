@@ -7,7 +7,7 @@ import talib.abstract as ta
 import pandas as pd
 import pandas_ta as pta
 from freqtrade.strategy.interface import IStrategy
-from freqtrade.strategy import merge_informative_pair
+from freqtrade.strategy import merge_informative_pair, IntParameter, DecimalParameter, CategoricalParameter
 from pandas import DataFrame, Series
 from functools import reduce
 from freqtrade.persistence import Trade, Order
@@ -781,12 +781,57 @@ class NostalgiaForInfinityX7(IStrategy):
     # "short_entry_condition_504_enable": True,
     # "short_entry_condition_541_enable": True,
     "short_entry_condition_542_enable": True,
+    "short_entry_condition_9201_enable": True,
     # "short_entry_condition_543_enable": True,
     # "short_entry_condition_603_enable": True,
     # "short_entry_condition_641_enable": True,
     # "short_entry_condition_642_enable": True,
     # "short_entry_condition_661_enable": True,
   }
+
+  # BearRider (9201) configuration and hyperopt parameters
+  # Phase flags
+  bearrider_phase2_enable = CategoricalParameter([True, False], default=True, space="buy", optimize=True)
+
+  # Stop thresholds (will be used by the system-level stop logic)
+  stop_threshold_bearrider_spot = 0.15
+  stop_threshold_bearrider_futures = 0.35
+
+  # Stake multipliers (arrays to match other mode config syntax)
+  bearrider_mode_stake_multiplier_spot = [0.85]
+  bearrider_mode_stake_multiplier_futures = [0.85]
+
+  # Mode tag/name
+  short_bearrider_mode_tags = ["9201"]
+  short_bearrider_mode_name = "short_bearrider"
+
+  # Hyperopt / signal tuning defaults for 9201 (can be overridden via config)
+  short_condition_9201_adx_min = IntParameter(20, 35, default=25, space="buy", optimize=True)
+  short_condition_9201_adx_max = IntParameter(50, 80, default=70, space="buy", optimize=True)
+  short_condition_9201_minus_di_min = IntParameter(20, 35, default=25, space="buy", optimize=True)
+  short_condition_9201_mfi_max = IntParameter(30, 50, default=40, space="buy", optimize=True)
+  short_condition_9201_rsi_1h_min = IntParameter(15, 30, default=20, space="buy", optimize=True)
+  short_condition_9201_rsi_1h_max = IntParameter(45, 60, default=50, space="buy", optimize=True)
+  short_condition_9201_volume_factor = DecimalParameter(0.8, 1.5, default=1.0, decimals=1, space="buy", optimize=True)
+  short_condition_9201_ema_ribbon_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
+  short_condition_9201_1h_confirmation_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
+
+  # Phase1 advanced
+  short_condition_9201_atr_min = DecimalParameter(0.8, 2.5, default=1.5, decimals=1, space="buy", optimize=True)
+  short_condition_9201_bb_width_min = DecimalParameter(2.0, 5.0, default=3.0, decimals=1, space="buy", optimize=True)
+  short_condition_9201_adx_slope_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
+  short_condition_9201_supertrend_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
+  short_condition_9201_obv_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
+  short_condition_9201_stochrsi_min = IntParameter(40, 70, default=50, space="buy", optimize=True)
+  short_condition_9201_willr_min = IntParameter(-40, -10, default=-20, space="buy", optimize=True)
+  short_condition_9201_willr_max = IntParameter(-90, -70, default=-80, space="buy", optimize=True)
+  short_condition_9201_vwap_enable = CategoricalParameter([0, 1], default=1, space="buy", optimize=True)
+  short_condition_9201_volume_relative_min = DecimalParameter(1.0, 2.0, default=1.2, decimals=1, space="buy", optimize=True)
+  short_condition_9201_roc_max = IntParameter(-5, 0, default=-1, space="buy", optimize=True)
+  short_condition_9201_cmo_max = IntParameter(-20, -5, default=-10, space="buy", optimize=True)
+
+  # Phase2 regime detection
+  bearrider_regime_volatility_threshold = DecimalParameter(0.8, 2.5, default=1.2, decimals=1, space="buy", optimize=True)
 
   #############################################################
   # CACHES
@@ -2170,6 +2215,32 @@ class NostalgiaForInfinityX7(IStrategy):
       if sell and (signal_name is not None):
         return f"{signal_name} ( {enter_tag})"
 
+    # BearRider (9201) custom exit handling
+    if any(("9201" in c) for c in enter_tags):
+      sell, signal_name = self.exit_short_bearrider(
+        pair,
+        current_rate,
+        profit_stake,
+        profit_ratio,
+        profit_current_stake_ratio,
+        profit_init_ratio,
+        max_profit,
+        max_loss,
+        filled_entries,
+        filled_exits,
+        last_candle,
+        previous_candle_1,
+        previous_candle_2,
+        previous_candle_3,
+        previous_candle_4,
+        previous_candle_5,
+        trade,
+        current_time,
+        enter_tags,
+      )
+      if sell and (signal_name is not None):
+        return f"{signal_name} ( {enter_tag})"
+
     # Trades not opened by X7
     if not trade.is_short and (
       not any(
@@ -2257,6 +2328,88 @@ class NostalgiaForInfinityX7(IStrategy):
 
     return None
 
+  # Exit logic for BearRider short entries (9201)
+  # ---------------------------------------------------------------------------------------------
+  def exit_short_bearrider(
+    self,
+    pair: str,
+    current_rate: float,
+    profit_stake: float,
+    profit_ratio: float,
+    profit_current_stake_ratio: float,
+    profit_init_ratio: float,
+    max_profit: float,
+    max_loss: float,
+    filled_entries,
+    filled_exits,
+    last_candle,
+    previous_candle_1,
+    previous_candle_2,
+    previous_candle_3,
+    previous_candle_4,
+    previous_candle_5,
+    trade: "Trade",
+    current_time: "datetime",
+    enter_tags,
+  ) -> tuple:
+    """
+    Return (sell: bool, signal_name: str) for BearRider short exit rules.
+    """
+    # Emergency oversold
+    if last_candle.get("MFI_14", 100.0) < 10.0:
+      return True, "exit_s9201_mfi_oversold"
+    if last_candle.get("RSI_14", 100.0) < 20.0:
+      return True, "exit_s9201_rsi_oversold"
+    if last_candle.get("STOCHRSIk_14_14_3_3", 100.0) < 20.0:
+      return True, "exit_s9201_stochrsi_oversold"
+    if last_candle.get("WILLR_14", 0.0) < -95.0:
+      return True, "exit_s9201_willr_extreme"
+
+    # Reversal signals
+    if last_candle.get("close", 0.0) > last_candle.get("EMA_21", 0.0):
+      return True, "exit_s9201_ema21_break"
+    if last_candle.get("PLUS_DI_14", 0.0) > last_candle.get("MINUS_DI_14", 0.0):
+      return True, "exit_s9201_di_reversal"
+    if last_candle.get("ST_10_3", 0.0) > 0:
+      return True, "exit_s9201_supertrend_bullish"
+    if last_candle.get("close", 0.0) > last_candle.get("VWAP", 0.0):
+      return True, "exit_s9201_vwap_break"
+
+    # Momentum loss
+    if last_candle.get("ADX_14", 0.0) < 20.0:
+      return True, "exit_s9201_adx_weak"
+    try:
+      if (previous_candle_3.get("ADX_14", 0.0) - last_candle.get("ADX_14", 0.0)) > 15.0:
+        return True, "exit_s9201_adx_drop"
+    except Exception:
+      pass
+
+    # 1h reversal
+    if last_candle.get("RSI_14_1h", 0.0) > 60.0:
+      return True, "exit_s9201_rsi_1h_high"
+    if last_candle.get("CMF_20_1h", 0.0) > 0.2:
+      return True, "exit_s9201_cmf_1h_high"
+
+    # Timeout (approximate: > 4h -> 48 candles of 5m)
+    try:
+      age_candles = len(filled_entries)  # not accurate here; keep conservative default
+    except Exception:
+      age_candles = 0
+    # Tiered profit exits (simple heuristics)
+    if profit_init_ratio is not None:
+      if 0.005 <= profit_init_ratio < 0.02:
+        # light profit take on order-flow reversal
+        if last_candle.get("OBV", 0.0) > last_candle.get("OBV_EMA_20", 0.0):
+          return True, "exit_s9201_profit_tier1"
+      if 0.02 <= profit_init_ratio < 0.05:
+        if last_candle.get("RSI_14", 0.0) > 60.0 or last_candle.get("EMA_8", 0.0) < last_candle.get("close", 0.0):
+          return True, "exit_s9201_profit_tier2"
+      if profit_init_ratio >= 0.05:
+        if last_candle.get("EMA_8", 0.0) < last_candle.get("close", 0.0):
+          return True, "exit_s9201_profit_tier3"
+
+    return False, None
+
   # Custom Stake Amount
   # ---------------------------------------------------------------------------------------------
   def custom_stake_amount(
@@ -2332,6 +2485,15 @@ class NostalgiaForInfinityX7(IStrategy):
             return min_stake
     else:
       # Rebuy mode
+      # BearRider stake adjustment
+      if any(("9201" in c) for c in enter_tags):
+        stake_multiplier = (
+          self.bearrider_mode_stake_multiplier_futures[0] if self.is_futures_mode else self.bearrider_mode_stake_multiplier_spot[0]
+        )
+        if (proposed_stake * stake_multiplier) > min_stake:
+          return proposed_stake * stake_multiplier
+        else:
+          return min_stake
       if all(c in self.short_rebuy_mode_tags for c in enter_tags) or (
         any(c in self.short_rebuy_mode_tags for c in enter_tags)
         and all(c in (self.short_rebuy_mode_tags + self.short_grind_mode_tags) for c in enter_tags)
@@ -3536,8 +3698,10 @@ class NostalgiaForInfinityX7(IStrategy):
     df["RSI_14_change_pct"] = ((df["RSI_14"] - df["RSI_14"].shift(1)) / (df["RSI_14"].shift(1))) * 100.0
     # EMA
     df["EMA_3"] = pta.ema(df["close"], length=3)
+    df["EMA_8"] = pta.ema(df["close"], length=8)
     df["EMA_9"] = pta.ema(df["close"], length=9)
     df["EMA_12"] = pta.ema(df["close"], length=12)
+    df["EMA_21"] = pta.ema(df["close"], length=21)
     df["EMA_16"] = pta.ema(df["close"], length=16)
     df["EMA_20"] = pta.ema(df["close"], length=20)
     df["EMA_26"] = pta.ema(df["close"], length=26)
@@ -3603,6 +3767,127 @@ class NostalgiaForInfinityX7(IStrategy):
     df["close_min_48"] = df["close"].rolling(48).min()
     # Number of empty candles
     df["num_empty_288"] = (df["volume"] <= 0).rolling(window=288, min_periods=288).sum()
+
+    # BearRider / Phase1 indicators (only add if not already present)
+    if "ADX_14" not in df.columns:
+      adx = pta.adx(df["high"], df["low"], df["close"], length=14)
+      if isinstance(adx, pd.DataFrame):
+        df["ADX_14"] = adx.get("ADX_14")
+        # pandas_ta names for DI+/- are DMP_14 and DMN_14
+        df["PLUS_DI_14"] = adx.get("DMP_14")
+        df["MINUS_DI_14"] = adx.get("DMN_14")
+      else:
+        df["ADX_14"] = np.nan
+        df["PLUS_DI_14"] = np.nan
+        df["MINUS_DI_14"] = np.nan
+
+    if "ATR_14" not in df.columns:
+      df["ATR_14"] = pta.atr(df["high"], df["low"], df["close"], length=14)
+      df["ATR_percent"] = df["ATR_14"] / df["close"] * 100.0
+
+    # Bollinger bandwidth using 20,2 values already present
+    if ("BBU_20_2.0" in df.columns) and ("BBL_20_2.0" in df.columns) and ("BBM_20_2.0" in df.columns):
+      df["BB_width_20"] = (df["BBU_20_2.0"] - df["BBL_20_2.0"]) / df["BBM_20_2.0"] * 100.0
+
+    # Historical volatility (pct change std)
+    if "HV_20" not in df.columns:
+      df["HV_20"] = df["close"].pct_change().rolling(20).std() * 100.0
+
+    # ADX slope (persistence)
+    if "ADX_slope" not in df.columns:
+      df["ADX_slope"] = df["ADX_14"] - df["ADX_14"].shift(3)
+
+    # SuperTrend dual
+    try:
+      st10 = pta.supertrend(df["high"], df["low"], df["close"], length=10, multiplier=3.0)
+      st11 = pta.supertrend(df["high"], df["low"], df["close"], length=11, multiplier=2.0)
+      if isinstance(st10, pd.DataFrame):
+        # names: SUPERT_10_3.0 and SUPERTd_10_3.0 (direction)
+        df["ST_10_3"] = st10.iloc[:, -1]
+      if isinstance(st11, pd.DataFrame):
+        df["ST_11_2"] = st11.iloc[:, -1]
+    except Exception:
+      df["ST_10_3"] = np.nan
+      df["ST_11_2"] = np.nan
+
+    # Parabolic SAR
+    if "SAR" not in df.columns:
+      try:
+        df["SAR"] = ta.SAR(df)
+      except Exception:
+        # talib.SAR expects arrays
+        try:
+          df["SAR"] = ta.SAR(df["high"], df["low"], acceleration=0.02, maximum=0.2)
+        except Exception:
+          df["SAR"] = np.nan
+
+    # Order flow indicators
+    if "OBV_EMA_20" not in df.columns:
+      df["OBV_EMA_20"] = pta.ema(df["OBV"], length=20)
+    if "AD" not in df.columns:
+      try:
+        ad = pta.ad(df["high"], df["low"], df["close"], df["volume"]) if hasattr(pta, "ad") else None
+        df["AD"] = ad if isinstance(ad, (pd.Series, pd.DataFrame)) else np.nan
+      except Exception:
+        df["AD"] = np.nan
+    if "AD_slope" not in df.columns:
+      df["AD_slope"] = df["AD"].diff(5)
+
+    # VPT and EOM
+    try:
+      df["VPT"] = pta.vpt(df["close"], df["volume"]) if hasattr(pta, "vpt") else np.nan
+      df["VPT_EMA_20"] = pta.ema(df["VPT"], length=20) if "VPT" in df.columns else np.nan
+    except Exception:
+      df["VPT"] = np.nan
+      df["VPT_EMA_20"] = np.nan
+
+    df["EOM_14"] = pta.eom(df["high"], df["low"], df["close"], df["volume"], length=14) if hasattr(pta, "eom") else np.nan
+
+    # Advanced momentum
+    df["MOM_10"] = pta.mom(df["close"], length=10)
+    df["CMO_14"] = pta.cmo(df["close"], length=14)
+
+    # VWAP / Volume enhancements
+    try:
+      df["VWAP"] = pta.vwap(df["high"], df["low"], df["close"], df["volume"]) if hasattr(pta, "vwap") else np.nan
+    except Exception:
+      df["VWAP"] = np.nan
+
+    df["VO"] = pta.sma(df["volume"], length=5) - pta.sma(df["volume"], length=10)
+
+    # NVI implementation (vectorized)
+    if "NVI" not in df.columns:
+      vol = df["volume"].fillna(0)
+      pct = df["close"].pct_change().fillna(0)
+      mask = vol < vol.shift(1)
+      factor = np.where(mask, 1.0 + pct, 1.0)
+      # replace nan with 1.0 for cumulative product
+      factor = pd.Series(factor, index=df.index).fillna(1.0)
+      df["NVI"] = 1000.0 * factor.cumprod()
+      df["NVI_EMA_255"] = pta.ema(df["NVI"], length=255)
+
+    # PVT and slope
+    if "PVT" not in df.columns:
+      df["PVT"] = ((df["close"] - df["close"].shift(1)) / df["close"].shift(1)) * df["volume"]
+      df["PVT_slope"] = df["PVT"].diff(5)
+
+    # Volume relative
+    if "volume_relative" not in df.columns:
+      df["volume_relative"] = df["volume"] / (pta.sma(df["volume"], length=50) + 1e-9)
+
+    # volume mean 12 used in entry checks
+    if "volume_mean_12" not in df.columns:
+      df["volume_mean_12"] = df["volume"].rolling(window=12, min_periods=1).mean()
+
+    # Regime flags (Phase2)
+    try:
+      df["be_regime_trending"] = (df["ADX_14"] > self.short_condition_9201_adx_min.value) & (
+        df["BB_width_20"] > self.bearrider_regime_volatility_threshold.value
+      )
+      df["be_regime_volatile"] = df["ATR_percent"] > self.bearrider_regime_volatility_threshold.value
+    except Exception:
+      df["be_regime_trending"] = False
+      df["be_regime_volatile"] = False
 
     # -----------------------------------------------------------------------------------------
 
@@ -19400,6 +19685,75 @@ class NostalgiaForInfinityX7(IStrategy):
           else:
             short_entry_logic.append(pd.Series([False]))
           short_entry_logic.append(df["BBB_20_2.0_1h"] > 4.0)
+
+        # Condition #9201 - BearRider short (multi-layered)
+        if short_entry_condition_index == 9201:
+          # Basic protections
+          short_entry_logic.append(df["num_empty_288"] <= allowed_empty_candles_288)
+          short_entry_logic.append(df["protections_short_global"] == True)
+          short_entry_logic.append(df["global_protections_short_pump"] == True)
+          short_entry_logic.append(df["global_protections_short_dump"] == True)
+
+          # Phase2 regime requirement (optional)
+          if self.bearrider_phase2_enable.value:
+            short_entry_logic.append(df.get("be_regime_trending", False) == True)
+
+          # Layer 1 - Volatility
+          short_entry_logic.append(df.get("ATR_percent", 0.0) > self.short_condition_9201_atr_min.value)
+          short_entry_logic.append(df.get("BB_width_20", 0.0) > self.short_condition_9201_bb_width_min.value)
+
+          # Layer 2 - ADX strength
+          short_entry_logic.append((df.get("ADX_14", 0.0) > self.short_condition_9201_adx_min.value) & (df.get("ADX_14", 0.0) < self.short_condition_9201_adx_max.value))
+          if self.short_condition_9201_adx_slope_enable.value:
+            short_entry_logic.append(df.get("ADX_slope", 0.0) > 0)
+
+          # Layer 3 - Directional
+          short_entry_logic.append(df.get("MINUS_DI_14", 0.0) > df.get("PLUS_DI_14", 0.0))
+          short_entry_logic.append(df.get("MINUS_DI_14", 0.0) > self.short_condition_9201_minus_di_min.value)
+
+          # Layer 4 - Trend persistence
+          if self.short_condition_9201_supertrend_enable.value:
+            short_entry_logic.append(df.get("ST_10_3", 0.0) < 0)
+            short_entry_logic.append(df.get("ST_11_2", 0.0) < 0)
+          short_entry_logic.append(df.get("close", 0.0) < df.get("SAR", 0.0))
+
+          # Layer 5 - Order flow
+          if self.short_condition_9201_obv_enable.value:
+            short_entry_logic.append(df.get("OBV", 0.0) < df.get("OBV_EMA_20", 0.0))
+            short_entry_logic.append(df.get("AD_slope", 0.0) < 0)
+            short_entry_logic.append(df.get("VPT", 0.0) < df.get("VPT_EMA_20", 0.0))
+            short_entry_logic.append(df.get("EOM_14", 0.0) < 0)
+
+          # Layer 6 - Advanced momentum
+          short_entry_logic.append((df.get("STOCHRSIk_14_14_3_3", 0.0) > self.short_condition_9201_stochrsi_min.value) & (df.get("STOCHRSIk_14_14_3_3", 0.0) < df.get("STOCHRSId_14_14_3_3", 100.0)))
+          short_entry_logic.append((df.get("WILLR_14", 0.0) > self.short_condition_9201_willr_max.value) & (df.get("WILLR_14", 0.0) < self.short_condition_9201_willr_min.value))
+          short_entry_logic.append(df.get("ROC_9", 0.0) < self.short_condition_9201_roc_max.value)
+          short_entry_logic.append(df.get("MOM_10", 0.0) < 0)
+          short_entry_logic.append(df.get("CMO_14", 0.0) < self.short_condition_9201_cmo_max.value)
+
+          # Layer 7 - Money flow
+          short_entry_logic.append(df.get("MFI_14", 100.0) < self.short_condition_9201_mfi_max.value)
+          short_entry_logic.append((df.get("RSI_14", 0.0) > 25.0) & (df.get("RSI_14", 0.0) < 70.0))
+
+          # Layer 8 - EMA ribbon
+          if self.short_condition_9201_ema_ribbon_enable.value:
+            short_entry_logic.append((df.get("close", 0.0) < df.get("EMA_8", 0.0)) & (df.get("EMA_8", 0.0) < df.get("EMA_21", 0.0)))
+
+          # Layer 9 - Enhanced volume
+          if self.short_condition_9201_vwap_enable.value:
+            short_entry_logic.append(df.get("close", 0.0) < df.get("VWAP", 0.0))
+          short_entry_logic.append(df.get("VO", 0.0) > 0)
+          short_entry_logic.append(df.get("NVI", 0.0) < df.get("NVI_EMA_255", 0.0))
+          short_entry_logic.append(df.get("PVT_slope", 0.0) < 0)
+          short_entry_logic.append(df.get("volume_relative", 0.0) > self.short_condition_9201_volume_relative_min.value)
+          short_entry_logic.append(df.get("volume", 0.0) > (df.get("volume_mean_12", 0.0) * self.short_condition_9201_volume_factor.value))
+
+          # Layer 10 - 1h confirmation
+          if self.short_condition_9201_1h_confirmation_enable.value:
+            short_entry_logic.append(df.get("close", 0.0) < df.get("EMA_200_1h", 0.0))
+            short_entry_logic.append((df.get("RSI_14_1h", 50.0) > self.short_condition_9201_rsi_1h_min.value) & (df.get("RSI_14_1h", 50.0) < self.short_condition_9201_rsi_1h_max.value))
+            short_entry_logic.append(df.get("CMF_20_1h", 0.0) < 0)
+
 
         ###############################################################################################
 
