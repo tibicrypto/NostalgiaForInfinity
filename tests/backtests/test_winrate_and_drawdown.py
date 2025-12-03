@@ -37,8 +37,11 @@ EXPECTED RESULTS:
 """
 
 import os.path
+import re
+from pathlib import Path
 
 import pytest
+import yaml
 
 from tests.backtests.helpers import Backtest
 from tests.backtests.helpers import Exchange
@@ -104,41 +107,43 @@ def timerange_fmt(value):
   return f"{value.start_date}-{value.end_date}"
 
 
+def _load_timeranges_from_workflow():
+  """Load timeranges directly from the GitHub Actions workflow file.
+  
+  This reads .github/workflows/backtests.yml and extracts the TIMERANGE
+  matrix values, ensuring tests always match what the CI runs.
+  
+  Returns:
+    tuple: Timerange objects parsed from the workflow file
+  """
+  workflow_file = REPO_ROOT / ".github" / "workflows" / "backtests.yml"
+  
+  try:
+    with open(workflow_file, 'r') as f:
+      workflow_data = yaml.safe_load(f)
+    
+    # Navigate to the TIMERANGE matrix in Backtest-Binance-Futures job
+    job_config = workflow_data.get('jobs', {}).get('Backtest-Binance-Futures', {})
+    matrix = job_config.get('strategy', {}).get('matrix', {})
+    timerange_list = matrix.get('TIMERANGE', [])
+    
+    # Parse timeranges (format: YYYYMMDD-YYYYMMDD)
+    timeranges = []
+    for tr in timerange_list:
+      parts = str(tr).split('-')
+      if len(parts) == 2:
+        timeranges.append(Timerange(parts[0], parts[1]))
+    
+    return tuple(timeranges)
+    
+  except Exception as e:
+    # Fallback to empty tuple if workflow parsing fails
+    pytest.fail(f"Failed to load timeranges from workflow file: {e}")
+    return tuple()
+
+
 @pytest.fixture(
-  params=(
-    # # Monthly Test Periods
-    # # # ADD NEW MONTHS HERE
-    # # # #
-    # # # 2025 Monthly Test Periods
-    # # # #
-    Timerange("20251201", "20260101"),
-    Timerange("20251101", "20251201"),
-    Timerange("20251001", "20251101"),
-    Timerange("20250901", "20251001"),
-    Timerange("20250801", "20250901"),
-    Timerange("20250701", "20250801"),
-    Timerange("20250601", "20250701"),
-    Timerange("20250501", "20250601"),
-    Timerange("20250401", "20250501"),
-    Timerange("20250301", "20250401"),
-    Timerange("20250201", "20250301"),
-    Timerange("20250101", "20250201"),
-    # # #
-    # # 2024 Monthly Test Periods
-    # # #
-    Timerange("20241201", "20250101"),
-    Timerange("20241101", "20241201"),
-    Timerange("20241001", "20241101"),
-    Timerange("20240901", "20241001"),
-    Timerange("20240801", "20240901"),
-    Timerange("20240701", "20240801"),
-    Timerange("20240601", "20240701"),
-    Timerange("20240501", "20240601"),
-    Timerange("20240401", "20240501"),
-    Timerange("20240301", "20240401"),
-    Timerange("20240201", "20240301"),
-    Timerange("20240101", "20240201"),
-  ),
+  params=_load_timeranges_from_workflow(),
   ids=timerange_fmt,
 )
 def timerange(request):
