@@ -15,9 +15,9 @@ jobs:
       matrix:
         TIMERANGE:
           - 20250601-20251101
-          - 20250101-20250601
+          - 20250101-20250530
           - 20240601-20241231
-          - 20240101-20240601
+          - 20240101-20240530
     steps:
       - uses: actions/checkout@v5
       - name: Inject Proxy Config
@@ -158,7 +158,7 @@ jobs:
       - name: Comment CI Results
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EXCLUDED_TIMERANGES: 20240101-20240601,20240601-20241231,20250101-20250601,20250601-20251101
+          EXCLUDED_TIMERANGES: 20240101-20240530,20240601-20241231,20250101-20250530,20250601-20251101
         run: |
           python .github/workflows/scripts/comment-ci-results.py \
             --repo=${{ github.event.repository.full_name }} downloaded-results
