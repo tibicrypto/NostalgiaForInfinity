@@ -71,7 +71,8 @@ class NostalgiaForInfinityX7(IStrategy):
   def version(self) -> str:
     return "v17.2.188"
 
-  stoploss = -0.99
+  # Stoploss hyperopt parameter (optimize in 'sell' space)
+  stoploss = DecimalParameter(-0.50, -0.01, default=-0.15, decimals=2, space="sell", optimize=True)
 
   # Trailing stoploss (not used)
   trailing_stop = False
@@ -790,33 +791,6 @@ class NostalgiaForInfinityX7(IStrategy):
   }
 
   # BearRider (9201) configuration and hyperopt parameters
-      # Sell parameters:
-sell_params = {
-    "bearrider_phase2_enable": False,
-    "bearrider_regime_volatility_threshold": 2.1,
-    "short_condition_9201_1h_confirmation_enable": 0,
-    "short_condition_9201_adx_max": 54,
-    "short_condition_9201_adx_min": 20,
-    "short_condition_9201_adx_slope_enable": 0,
-    "short_condition_9201_atr_min": 2.0,
-    "short_condition_9201_bb_width_min": 2.0,
-    "short_condition_9201_cmo_max": -5,
-    "short_condition_9201_ema_ribbon_enable": 0,
-    "short_condition_9201_mfi_max": 33,
-    "short_condition_9201_minus_di_min": 22,
-    "short_condition_9201_obv_enable": 1,
-    "short_condition_9201_roc_max": -3,
-    "short_condition_9201_rsi_1h_max": 49,
-    "short_condition_9201_rsi_1h_min": 24,
-    "short_condition_9201_stochrsi_min": 44,
-    "short_condition_9201_supertrend_enable": 1,
-    "short_condition_9201_volume_factor": 1.1,
-    "short_condition_9201_volume_relative_min": 1.8,
-    "short_condition_9201_vwap_enable": 1,
-    "short_condition_9201_willr_max": -78,
-    "short_condition_9201_willr_min": -39,
-    }
-
   # Phase flags
   bearrider_phase2_enable = CategoricalParameter([True, False], default=True, space="sell", optimize=True)
 
@@ -858,6 +832,27 @@ sell_params = {
   short_condition_9201_cmo_max = IntParameter(-20, -5, default=-10, space="sell", optimize=True)
   # Phase2 regime detection
   bearrider_regime_volatility_threshold = DecimalParameter(0.8, 2.5, default=1.2, decimals=1, space="sell", optimize=True)
+
+  # Hyperopt ROI parameters (three-tier ROI schedule)
+  bearrider_roi_0 = DecimalParameter(0.005, 0.20, default=0.03, decimals=3, space="sell", optimize=True)
+  bearrider_roi_1 = DecimalParameter(0.001, 0.10, default=0.01, decimals=3, space="sell", optimize=True)
+  bearrider_roi_2 = DecimalParameter(0.0005, 0.05, default=0.005, decimals=4, space="sell", optimize=True)
+  bearrider_roi_1_time = IntParameter(5, 240, default=30, space="sell", optimize=True)
+  bearrider_roi_2_time = IntParameter(60, 1440, default=1440, space="sell", optimize=True)
+
+  def minimal_roi(self) -> dict:
+    """Construct minimal ROI schedule from hyperopt parameters.
+    Returns a dict mapping minutes -> roi as required by Freqtrade.
+    """
+    try:
+      return {
+        0: float(self.bearrider_roi_0.value),
+        int(self.bearrider_roi_1_time.value): float(self.bearrider_roi_1.value),
+        int(self.bearrider_roi_2_time.value): float(self.bearrider_roi_2.value),
+      }
+    except Exception:
+      # Fallback default
+      return {0: 0.03, 30: 0.01, 1440: 0.005}
 
   #############################################################
   # CACHES
