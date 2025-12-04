@@ -73,7 +73,7 @@ jobs:
             --log-cli-level=info \
             --artifacts-path=artifacts/ \
             -p no:cacheprovider \
-            -n 1 \
+            -n 2 \
             -k "binance and futures and ${{ matrix.TIMERANGE }}" \
             --junitxml="artifacts/binance-futures-${{ matrix.TIMERANGE }}-report.xml"
 
