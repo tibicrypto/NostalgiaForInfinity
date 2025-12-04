@@ -9,7 +9,7 @@ on:
 jobs:
   # Backtest Jobs
   Backtest-Binance-Futures:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:
@@ -76,7 +76,7 @@ jobs:
     if: always()
     needs:
       - Backtest-Binance-Futures
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:
@@ -92,7 +92,7 @@ jobs:
   Comment-CI-Results:
     if: always()
     needs: Merge-Artifacts
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: write
       actions: read
