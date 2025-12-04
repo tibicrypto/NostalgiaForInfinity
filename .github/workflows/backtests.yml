@@ -32,20 +32,20 @@ jobs:
 
       - name: Pull docker image
         run: |
-          docker pull ghcr.io/tibicrypto/ci-strategy-backtesting:latest
+          sudo docker pull ghcr.io/tibicrypto/ci-strategy-backtesting:latest
 
       - name: Pull Market data and copy to user_data/data
         run: |
-          docker pull ghcr.io/tibicrypto/market-data:binance-futures
+          sudo docker pull ghcr.io/tibicrypto/market-data:binance-futures
           mkdir -p user_data/data
-          docker run --rm -v "$PWD/user_data/data:/host_data" ghcr.io/tibicrypto/market-data:binance-futures \
+          sudo docker run --rm -v "$PWD/user_data/data:/host_data" ghcr.io/tibicrypto/market-data:binance-futures \
             bash -c "cp -r /data/* /host_data/"
 
       - name: Run Backtests
         run: |
           mkdir -p artifacts && chmod 777 artifacts
           export COLUMNS=240
-          docker run -v "$PWD:/testing" \
+          sudo docker run -v "$PWD:/testing" \
             -v "$PWD/user_data/data:/testing/user_data/data" \
             --rm \
             -w /testing \
