@@ -22,7 +22,7 @@ freqtrade hyperopt \
   --config configs/pairlist-hyperopt-static-binance-futures-usdt.json \
   --timerange 20250501-20251130 \
   --epochs 200 \
-  --spaces roi,stoploss \
+  --spaces roi stoploss sell \
   --random-state 42 \
   -j 4
 
