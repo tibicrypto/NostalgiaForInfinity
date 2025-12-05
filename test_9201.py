@@ -1,18 +1,14 @@
-import copy
 import logging
-import pathlib
-import rapidjson
 import numpy as np
 import talib.abstract as ta
 import pandas as pd
 import pandas_ta as pta
 from freqtrade.strategy.interface import IStrategy
 from freqtrade.strategy import merge_informative_pair, IntParameter, DecimalParameter, CategoricalParameter
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from functools import reduce
-from freqtrade.persistence import Trade, Order
-from datetime import datetime, timedelta
-import time
+from freqtrade.persistence import Trade
+from datetime import datetime
 from typing import Optional
 import warnings
 
@@ -340,69 +336,88 @@ class Test9201(IStrategy):
 
     # Basic protections
     short_entry_logic.append(df["num_empty_288"] <= allowed_empty_candles_288)
-    short_entry_logic.append(df["protections_short_global"] == True)
-    short_entry_logic.append(df["global_protections_short_pump"] == True)
-    short_entry_logic.append(df["global_protections_short_dump"] == True)
+    short_entry_logic.append((df["protections_short_global"] == True) | (df["protections_short_global"].isna()))
+    short_entry_logic.append((df["global_protections_short_pump"] == True) | (df["global_protections_short_pump"].isna()))
+    short_entry_logic.append((df["global_protections_short_dump"] == True) | (df["global_protections_short_dump"].isna()))
 
     # Phase2 regime requirement (optional)
     if self.bearrider_phase2_enable.value:
-      short_entry_logic.append(df.get("be_regime_trending", False) == True)
+      short_entry_logic.append((df.get("be_regime_trending") == True) | (df.get("be_regime_trending").isna()))
 
     # Layer 1 - Volatility
-    short_entry_logic.append(df.get("ATR_percent", 0.0) > self.short_condition_9201_atr_min.value)
-    short_entry_logic.append(df.get("BB_width_20", 0.0) > self.short_condition_9201_bb_width_min.value)
+    short_entry_logic.append(df.get("ATR_percent", 0.0).fillna(0.0) > self.short_condition_9201_atr_min.value)
+    short_entry_logic.append(df.get("BB_width_20", 0.0).fillna(0.0) > self.short_condition_9201_bb_width_min.value)
 
     # Layer 2 - ADX strength
-    short_entry_logic.append((df.get("ADX_14", 0.0) > self.short_condition_9201_adx_min.value) & (df.get("ADX_14", 0.0) < self.short_condition_9201_adx_max.value))
+    short_entry_logic.append(
+      (df.get("ADX_14", 0.0).fillna(0.0) > self.short_condition_9201_adx_min.value)
+      & (df.get("ADX_14", 0.0).fillna(0.0) < self.short_condition_9201_adx_max.value)
+    )
     if self.short_condition_9201_adx_slope_enable.value:
-      short_entry_logic.append(df.get("ADX_slope", 0.0) > 0)
+      short_entry_logic.append(df.get("ADX_slope", 0.0).fillna(0.0) > 0)
 
     # Layer 3 - Directional
-    short_entry_logic.append(df.get("MINUS_DI_14", 0.0) > df.get("PLUS_DI_14", 0.0))
-    short_entry_logic.append(df.get("MINUS_DI_14", 0.0) > self.short_condition_9201_minus_di_min.value)
+    short_entry_logic.append(
+      df.get("MINUS_DI_14", 0.0).fillna(0.0) > df.get("PLUS_DI_14", 0.0).fillna(0.0)
+    )
+    short_entry_logic.append(df.get("MINUS_DI_14", 0.0).fillna(0.0) > self.short_condition_9201_minus_di_min.value)
 
     # Layer 4 - Trend persistence
     if self.short_condition_9201_supertrend_enable.value:
-      short_entry_logic.append(df.get("ST_10_3", 0.0) < 0)
-      short_entry_logic.append(df.get("ST_11_2", 0.0) < 0)
-    short_entry_logic.append(df.get("close", 0.0) < df.get("SAR", 0.0))
+      short_entry_logic.append(df.get("ST_10_3", 0.0).fillna(0.0) < 0)
+      short_entry_logic.append(df.get("ST_11_2", 0.0).fillna(0.0) < 0)
+    short_entry_logic.append(df.get("close", 0.0) < df.get("SAR", 0.0).fillna(0.0))
 
     # Layer 5 - Order flow
     if self.short_condition_9201_obv_enable.value:
-      short_entry_logic.append(df.get("OBV", 0.0) < df.get("OBV_EMA_20", 0.0))
-      short_entry_logic.append(df.get("AD_slope", 0.0) < 0)
-      short_entry_logic.append(df.get("VPT", 0.0) < df.get("VPT_EMA_20", 0.0))
-      short_entry_logic.append(df.get("EOM_14", 0.0) < 0)
+      short_entry_logic.append(df.get("OBV", 0.0).fillna(0.0) < df.get("OBV_EMA_20", 0.0).fillna(0.0))
+      short_entry_logic.append(df.get("AD_slope", 0.0).fillna(0.0) < 0)
+      short_entry_logic.append(df.get("VPT", 0.0).fillna(0.0) < df.get("VPT_EMA_20", 0.0).fillna(0.0))
+      short_entry_logic.append(df.get("EOM_14", 0.0).fillna(0.0) < 0)
 
     # Layer 6 - Advanced momentum
-    short_entry_logic.append((df.get("STOCHRSIk_14_14_3_3", 0.0) > self.short_condition_9201_stochrsi_min.value) & (df.get("STOCHRSIk_14_14_3_3", 0.0) < df.get("STOCHRSId_14_14_3_3", 100.0)))
-    short_entry_logic.append((df.get("WILLR_14", 0.0) > self.short_condition_9201_willr_max.value) & (df.get("WILLR_14", 0.0) < self.short_condition_9201_willr_min.value))
-    short_entry_logic.append(df.get("ROC_9", 0.0) < self.short_condition_9201_roc_max.value)
-    short_entry_logic.append(df.get("MOM_10", 0.0) < 0)
-    short_entry_logic.append(df.get("CMO_14", 0.0) < self.short_condition_9201_cmo_max.value)
+    short_entry_logic.append(
+      (df.get("STOCHRSIk_14_14_3_3", 0.0).fillna(0.0) > self.short_condition_9201_stochrsi_min.value)
+      & (df.get("STOCHRSIk_14_14_3_3", 0.0).fillna(0.0) < df.get("STOCHRSId_14_14_3_3", 100.0).fillna(100.0))
+    )
+    short_entry_logic.append(
+      (df.get("WILLR_14", 0.0).fillna(0.0) > self.short_condition_9201_willr_max.value)
+      & (df.get("WILLR_14", 0.0).fillna(0.0) < self.short_condition_9201_willr_min.value)
+    )
+    short_entry_logic.append(df.get("ROC_9", 0.0).fillna(0.0) < self.short_condition_9201_roc_max.value)
+    short_entry_logic.append(df.get("MOM_10", 0.0).fillna(0.0) < 0)
+    short_entry_logic.append(df.get("CMO_14", 0.0).fillna(0.0) < self.short_condition_9201_cmo_max.value)
 
     # Layer 7 - Money flow
-    short_entry_logic.append(df.get("MFI_14", 100.0) < self.short_condition_9201_mfi_max.value)
-    short_entry_logic.append((df.get("RSI_14", 0.0) > 25.0) & (df.get("RSI_14", 0.0) < 70.0))
+    short_entry_logic.append(df.get("MFI_14", 100.0).fillna(100.0) < self.short_condition_9201_mfi_max.value)
+    short_entry_logic.append(
+      (df.get("RSI_14", 0.0).fillna(0.0) > 25.0) & (df.get("RSI_14", 0.0).fillna(0.0) < 70.0)
+    )
 
     # Layer 8 - EMA ribbon
     if self.short_condition_9201_ema_ribbon_enable.value:
-      short_entry_logic.append((df.get("close", 0.0) < df.get("EMA_8", 0.0)) & (df.get("EMA_8", 0.0) < df.get("EMA_21", 0.0)))
+      short_entry_logic.append(
+        (df.get("close", 0.0) < df.get("EMA_8", 0.0).fillna(0.0))
+        & (df.get("EMA_8", 0.0).fillna(0.0) < df.get("EMA_21", 0.0).fillna(0.0))
+      )
 
     # Layer 9 - Enhanced volume
     if self.short_condition_9201_vwap_enable.value:
-      short_entry_logic.append(df.get("close", 0.0) < df.get("VWAP", 0.0))
-    short_entry_logic.append(df.get("VO", 0.0) > 0)
-    short_entry_logic.append(df.get("NVI", 0.0) < df.get("NVI_EMA_255", 0.0))
-    short_entry_logic.append(df.get("PVT_slope", 0.0) < 0)
-    short_entry_logic.append(df.get("volume_relative", 0.0) > self.short_condition_9201_volume_relative_min.value)
-    short_entry_logic.append(df.get("volume", 0.0) > (df.get("volume_mean_12", 0.0) * self.short_condition_9201_volume_factor.value))
+      short_entry_logic.append(df.get("close", 0.0) < df.get("VWAP", 0.0).fillna(0.0))
+    short_entry_logic.append(df.get("VO", 0.0).fillna(0.0) > 0)
+    short_entry_logic.append(df.get("NVI", 0.0).fillna(0.0) < df.get("NVI_EMA_255", 0.0).fillna(0.0))
+    short_entry_logic.append(df.get("PVT_slope", 0.0).fillna(0.0) < 0)
+    short_entry_logic.append(df.get("volume_relative", 0.0).fillna(0.0) > self.short_condition_9201_volume_relative_min.value)
+    short_entry_logic.append(df["volume"] > (df.get("volume_mean_12", 0.0).fillna(0.0) * self.short_condition_9201_volume_factor.value))
 
     # Layer 10 - 1h confirmation
     if self.short_condition_9201_1h_confirmation_enable.value:
-      short_entry_logic.append(df.get("close", 0.0) < df.get("EMA_200_1h", 0.0))
-      short_entry_logic.append((df.get("RSI_14_1h", 50.0) > self.short_condition_9201_rsi_1h_min.value) & (df.get("RSI_14_1h", 50.0) < self.short_condition_9201_rsi_1h_max.value))
-      short_entry_logic.append(df.get("CMF_20_1h", 0.0) < 0)
+      short_entry_logic.append(df.get("close", 0.0) < df.get("EMA_200_1h", 0.0).fillna(0.0))
+      short_entry_logic.append(
+        (df.get("RSI_14_1h", 50.0).fillna(50.0) > self.short_condition_9201_rsi_1h_min.value)
+        & (df.get("RSI_14_1h", 50.0).fillna(50.0) < self.short_condition_9201_rsi_1h_max.value)
+      )
+      short_entry_logic.append(df.get("CMF_20_1h", 0.0).fillna(0.0) < 0)
 
     # Final volume check
     short_entry_logic.append(df["volume"] > 0)
@@ -431,13 +446,15 @@ class Test9201(IStrategy):
     **kwargs,
   ) -> Optional[str]:
     """Custom exit logic for BearRider 9201"""
-    df, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
+    try:
+      df, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
+    except Exception:
+      return None
+      
     if len(df) < 5:
       return None
 
     last_candle = df.iloc[-1].squeeze()
-    previous_candle_1 = df.iloc[-2].squeeze()
-    previous_candle_2 = df.iloc[-3].squeeze()
     previous_candle_3 = df.iloc[-4].squeeze()
 
     # Emergency oversold
