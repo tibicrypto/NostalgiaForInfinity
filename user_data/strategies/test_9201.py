@@ -31,10 +31,8 @@ class Test9201(IStrategy):
   def version(self) -> str:
     return "v1.0.0-test9201"
 
-  # Stoploss hyperopt parameter
-  stoploss = DecimalParameter(-0.50, -0.01, default=-0.15, decimals=2, space="stoploss", optimize=True)
-
-  # Trailing stoploss (not used)
+    # Stoploss hyperopt parameter (use --spaces sell to optimize, included in default spaces)
+    stoploss = DecimalParameter(-0.50, -0.01, default=-0.15, decimals=2, space="sell", optimize=True)  # Trailing stoploss (not used)
   trailing_stop = False
   trailing_only_offset_is_reached = True
   trailing_stop_positive = 0.01
@@ -90,15 +88,15 @@ class Test9201(IStrategy):
   bearrider_mode_stake_multiplier_spot = [0.85]
   bearrider_mode_stake_multiplier_futures = [0.85]
 
-  # Hyperopt ROI parameters
-  roi_0 = DecimalParameter(0.005, 0.20, default=0.03, decimals=3, space="roi", optimize=True)
-  roi_1 = DecimalParameter(0.001, 0.10, default=0.01, decimals=3, space="roi", optimize=True)
-  roi_2 = DecimalParameter(0.0005, 0.05, default=0.005, decimals=4, space="roi", optimize=True)
-  roi_1_time = IntParameter(5, 240, default=30, space="roi", optimize=True)
+  # Hyperopt ROI parameters (use --spaces roi to optimize, or include in hyperopt run)
+  roi_0 = DecimalParameter(0.01, 0.10, default=0.03, decimals=3, space="roi", optimize=True)
+  roi_1 = DecimalParameter(0.005, 0.05, default=0.01, decimals=3, space="roi", optimize=True)
+  roi_2 = DecimalParameter(0.001, 0.02, default=0.005, decimals=3, space="roi", optimize=True)
+  roi_1_time = IntParameter(10, 60, default=30, space="roi", optimize=True)
   roi_2_time = IntParameter(60, 1440, default=1440, space="roi", optimize=True)
 
   # Default minimal ROI - will be overridden by hyperopt
-  minimal_roi = {0: 0.03, 30: 0.01, 1440: 0.005}
+  minimal_roi = {"0": 0.03, "30": 0.01, "1440": 0.005}
 
   # Hyperopt parameters for 9201
   short_condition_9201_enable = CategoricalParameter([True, False], default=True, space="opt_9201", optimize=True)

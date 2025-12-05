@@ -1,6 +1,7 @@
 {
   "stake_currency": "USDT",
   "stake_amount": "unlimited",
+  "stoploss": -0.15,
   "max_open_trades": 6,
   "trading_mode": "futures",
   "margin_mode": "isolated",
