@@ -31,8 +31,8 @@ class Test9201(IStrategy):
   def version(self) -> str:
     return "v1.0.0-test9201"
 
-  # Stoploss hyperopt parameter
-  stoploss = DecimalParameter(-0.50, -0.01, default=-0.15, decimals=2, space="sell", optimize=True)
+  # Stoploss - fixed value (not optimized in opt_9201 space)
+  stoploss = -0.15
 
   # Trailing stoploss (not used)
   trailing_stop = False
@@ -121,8 +121,8 @@ class Test9201(IStrategy):
   bearrider_roi_0 = DecimalParameter(0.005, 0.20, default=0.03, decimals=3, space="sell", optimize=True)
   bearrider_roi_1 = DecimalParameter(0.001, 0.10, default=0.01, decimals=3, space="sell", optimize=True)
   bearrider_roi_2 = DecimalParameter(0.0005, 0.05, default=0.005, decimals=4, space="sell", optimize=True)
-  bearrider_roi_1_time = IntParameter(5, 240, default=30, space="sell", optimize=True)
-  bearrider_roi_2_time = IntParameter(60, 1440, default=1440, space="sell", optimize=True)
+  bearrider_roi_1_time = IntParameter(5, 240, default=30, space="opt_9201", optimize=True)
+  bearrider_roi_2_time = IntParameter(60, 1440, default=1440, space="opt_9201", optimize=True)
 
   def minimal_roi(self) -> dict:
     """Construct minimal ROI schedule from hyperopt parameters."""
