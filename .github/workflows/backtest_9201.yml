@@ -73,11 +73,11 @@ jobs:
             --artifacts-path=artifacts/ \
             -p no:cacheprovider \
             -n auto \
-            -k "test_9201 and binance and futures and ${{ matrix.TIMERANGE }}" \
+            -k "test_expected_values_test9201 and ${{ matrix.TIMERANGE }}" \
             --junitxml="artifacts/test9201-binance-futures-${{ matrix.TIMERANGE }}-report.xml"
 
       - name: Show Backtest Output
-        run: cat artifacts/backtest-output-test9201-binance-futures-${{ matrix.TIMERANGE }}.txt
+        run: cat artifacts/backtest-output-binance-futures-${{ matrix.TIMERANGE }}.txt
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:

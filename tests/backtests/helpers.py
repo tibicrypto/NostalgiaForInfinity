@@ -67,11 +67,19 @@ class Backtest:
     pairlist=None,
     exchange=None,
     trading_mode=None,
+    strategy=None,
+    pairlist_config=None,
   ):
     if exchange is None:
       exchange = self.exchange
     if exchange is None:
       raise RuntimeError(f"No 'exchange' was passed when instantiating {self.__class__.__name__} or when calling it")
+    
+    if strategy is None:
+      strategy = "NostalgiaForInfinityX7"
+    
+    if pairlist_config is None:
+      pairlist_config = f"pairlist-backtest-static-{exchange}-{trading_mode}-usdt.json"
 
     tmp_path = self.request.getfixturevalue("tmp_path")
 
@@ -80,13 +88,13 @@ class Backtest:
     export_dir.mkdir(parents=True, exist_ok=True)
     json_filename = f"backtest-result-{exchange}-{trading_mode}-{start_date}-{end_date}.json"
 
-    exchange_config = f"configs/pairlist-backtest-static-{exchange}-{trading_mode}-usdt.json"
+    exchange_config = f"configs/{pairlist_config}"
 
     # ---- Build cmdline ----
     cmdline = [
       "freqtrade",
       "backtesting",
-      "--strategy=NostalgiaForInfinityX7",
+      f"--strategy={strategy}",
       f"--timerange={start_date}-{end_date}",
       "--user-data-dir=user_data",
       "--config=configs/exampleconfig.json",
@@ -192,13 +200,15 @@ class BacktestResults:
     strategy_data = self.raw_data.get("strategy")
 
     if isinstance(strategy_data, dict):
-      # Expected structure: {"strategy": {"NostalgiaForInfinityX7": {...}}}
-      return strategy_data.get("NostalgiaForInfinityX7")
+      # Expected structure: {"strategy": {"StrategyName": {...}}}
+      # Get the first (and should be only) strategy in the dict
+      strategy_name = list(strategy_data.keys())[0]
+      return strategy_data.get(strategy_name)
 
-    elif isinstance(strategy_data, str) and strategy_data == "NostalgiaForInfinityX7":
-      # Fallback structure: {"strategy": "NostalgiaForInfinityX7"}
-      # Then use the top-level key instead
-      return self.raw_data.get("NostalgiaForInfinityX7")
+    elif isinstance(strategy_data, str):
+      # Fallback structure: {"strategy": "StrategyName"}
+      # Then use the strategy name as the top-level key
+      return self.raw_data.get(strategy_data)
 
     else:
       raise TypeError(f"Unsupported 'strategy' value: {strategy_data!r}. Expected a dict or strategy name.")
