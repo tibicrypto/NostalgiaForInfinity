@@ -3312,7 +3312,7 @@ class NostalgiaForInfinityX7(IStrategy):
       informative_4h["high"], informative_4h["low"], informative_4h["close"], length=20
     )
     informative_4h["CCI_20"] = (
-      (informative_4h["CCI_20"]).astype(np.float64).replace(to_replace=[np.nan, None], value=(0.0))
+      (informative_4h["CCI_20"]).astype(np.float64).fillna(0.0)
     )
     informative_4h["CCI_20_change_pct"] = (
       (informative_4h["CCI_20"] - informative_4h["CCI_20"].shift(1)) / abs(informative_4h["CCI_20"].shift(1))
@@ -3468,7 +3468,7 @@ class NostalgiaForInfinityX7(IStrategy):
     # UO
     informative_1h["UO_7_14_28"] = pta.uo(informative_1h["high"], informative_1h["low"], informative_1h["close"])
     informative_1h["UO_7_14_28"] = (
-      (informative_1h["UO_7_14_28"]).astype(np.float64).replace(to_replace=[np.nan, None], value=(50.0))
+      (informative_1h["UO_7_14_28"]).astype(np.float64).fillna(50.0)
     )
     informative_1h["UO_7_14_28_change_pct"] = (
       (informative_1h["UO_7_14_28"] - informative_1h["UO_7_14_28"].shift(1))
@@ -3487,7 +3487,7 @@ class NostalgiaForInfinityX7(IStrategy):
       informative_1h["high"], informative_1h["low"], informative_1h["close"], length=20
     )
     informative_1h["CCI_20"] = (
-      (informative_1h["CCI_20"]).astype(np.float64).replace(to_replace=[np.nan, None], value=(0.0))
+      (informative_1h["CCI_20"]).astype(np.float64).fillna(0.0)
     )
     informative_1h["CCI_20_change_pct"] = (
       (informative_1h["CCI_20"] - informative_1h["CCI_20"].shift(1)) / abs(informative_1h["CCI_20"].shift(1))
@@ -3626,7 +3626,7 @@ class NostalgiaForInfinityX7(IStrategy):
       informative_15m["high"], informative_15m["low"], informative_15m["close"], length=20
     )
     informative_15m["CCI_20"] = (
-      (informative_15m["CCI_20"]).astype(np.float64).replace(to_replace=[np.nan, None], value=(0.0))
+      (informative_15m["CCI_20"]).astype(np.float64).fillna(0.0)
     )
     informative_15m["CCI_20_change_pct"] = (
       (informative_15m["CCI_20"] - informative_15m["CCI_20"].shift(1)) / abs(informative_15m["CCI_20"].shift(1))
@@ -4149,7 +4149,7 @@ class NostalgiaForInfinityX7(IStrategy):
     # df["WILLR_480_1h"] = df["WILLR_480_1h"].astype(np.float64).replace(to_replace=[np.nan, None], value=(-50.0))
     # df["WILLR_480_4h"] = df["WILLR_480_4h"].astype(np.float64).replace(to_replace=[np.nan, None], value=(-50.0))
     # df["RSI_14_1d"] = df["RSI_14_1d"].astype(np.float64).replace(to_replace=[np.nan, None], value=(50.0))
-    df["RSI_14_1h"] = df["RSI_14_1h"].astype(np.float64).replace(to_replace=[np.nan, None], value=(50.0))
+    df["RSI_14_1h"] = df["RSI_14_1h"].astype(np.float64).fillna(50.0)
 
     # Global protections Long
     df["protections_long_global"] = (
