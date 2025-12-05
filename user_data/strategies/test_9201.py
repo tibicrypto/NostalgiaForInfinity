@@ -31,8 +31,8 @@ class Test9201(IStrategy):
   def version(self) -> str:
     return "v1.0.0-test9201"
 
-  # Stoploss - fixed value (not optimized in opt_9201 space)
-  stoploss = -0.15
+  # Stoploss hyperopt parameter
+  stoploss = DecimalParameter(-0.50, -0.01, default=-0.15, decimals=2, space="stoploss", optimize=True)
 
   # Trailing stoploss (not used)
   trailing_stop = False
@@ -90,6 +90,16 @@ class Test9201(IStrategy):
   bearrider_mode_stake_multiplier_spot = [0.85]
   bearrider_mode_stake_multiplier_futures = [0.85]
 
+  # Hyperopt ROI parameters
+  roi_0 = DecimalParameter(0.005, 0.20, default=0.03, decimals=3, space="roi", optimize=True)
+  roi_1 = DecimalParameter(0.001, 0.10, default=0.01, decimals=3, space="roi", optimize=True)
+  roi_2 = DecimalParameter(0.0005, 0.05, default=0.005, decimals=4, space="roi", optimize=True)
+  roi_1_time = IntParameter(5, 240, default=30, space="roi", optimize=True)
+  roi_2_time = IntParameter(60, 1440, default=1440, space="roi", optimize=True)
+
+  # Default minimal ROI - will be overridden by hyperopt
+  minimal_roi = {0: 0.03, 30: 0.01, 1440: 0.005}
+
   # Hyperopt parameters for 9201
   short_condition_9201_enable = CategoricalParameter([True, False], default=True, space="opt_9201", optimize=True)
   short_condition_9201_adx_min = IntParameter(20, 35, default=25, space="opt_9201", optimize=True)
@@ -116,24 +126,6 @@ class Test9201(IStrategy):
   short_condition_9201_roc_max = IntParameter(-5, 0, default=-1, space="opt_9201", optimize=True)
   short_condition_9201_cmo_max = IntParameter(-20, -5, default=-10, space="opt_9201", optimize=True)
   bearrider_regime_volatility_threshold = DecimalParameter(0.8, 2.5, default=1.2, decimals=1, space="opt_9201", optimize=True)
-
-  # Hyperopt ROI parameters
-  bearrider_roi_0 = DecimalParameter(0.005, 0.20, default=0.03, decimals=3, space="sell", optimize=True)
-  bearrider_roi_1 = DecimalParameter(0.001, 0.10, default=0.01, decimals=3, space="sell", optimize=True)
-  bearrider_roi_2 = DecimalParameter(0.0005, 0.05, default=0.005, decimals=4, space="sell", optimize=True)
-  bearrider_roi_1_time = IntParameter(5, 240, default=30, space="opt_9201", optimize=True)
-  bearrider_roi_2_time = IntParameter(60, 1440, default=1440, space="opt_9201", optimize=True)
-
-  def minimal_roi(self) -> dict:
-    """Construct minimal ROI schedule from hyperopt parameters."""
-    try:
-      return {
-        0: float(self.bearrider_roi_0.value),
-        int(self.bearrider_roi_1_time.value): float(self.bearrider_roi_1.value),
-        int(self.bearrider_roi_2_time.value): float(self.bearrider_roi_2.value),
-      }
-    except Exception:
-      return {0: 0.03, 30: 0.01, 1440: 0.005}
 
   # Entry signal params
   short_entry_signal_params = {
