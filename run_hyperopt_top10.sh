@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Activate virtual environment
+source .venv/bin/activate
+
 # Download historical data for top 10 coins (last 60 days)
 echo "Downloading data for top 10 coins..."
 freqtrade download-data \
@@ -8,7 +11,8 @@ freqtrade download-data \
   --config user_data/private_config.json \
   --config configs/pairlist-hyperopt-static-binance-futures-usdt.json \
   --timeframes 5m 1h 15m 4h 1d \
-  --timerange 20241201-20250206
+  --timerange 20241201-20250206 \
+  --prepend
 
 echo "Data download completed!"
 echo ""
