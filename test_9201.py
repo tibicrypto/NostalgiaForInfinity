@@ -33,7 +33,7 @@ class Test9201(IStrategy):
 
   # Stoploss hyperopt parameter (use --spaces sell to optimize, included in default spaces)
   stoploss = DecimalParameter(-0.50, -0.01, default=-0.15, decimals=2, space="sell", optimize=True)
-  
+  can_short = True
   # Trailing stoploss (not used)
   trailing_stop = False
   trailing_only_offset_is_reached = True

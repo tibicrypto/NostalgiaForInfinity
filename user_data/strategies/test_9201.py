@@ -31,8 +31,10 @@ class Test9201(IStrategy):
   def version(self) -> str:
     return "v1.0.0-test9201"
 
-    # Stoploss hyperopt parameter (use --spaces sell to optimize, included in default spaces)
-    stoploss = DecimalParameter(-0.50, -0.01, default=-0.15, decimals=2, space="sell", optimize=True)  # Trailing stoploss (not used)
+  # Stoploss hyperopt parameter (use --spaces sell to optimize, included in default spaces)
+  stoploss = DecimalParameter(-0.50, -0.01, default=-0.15, decimals=2, space="sell", optimize=True)
+  can_short = True
+  # Trailing stoploss (not used)
   trailing_stop = False
   trailing_only_offset_is_reached = True
   trailing_stop_positive = 0.01
@@ -100,30 +102,36 @@ class Test9201(IStrategy):
 
   # Hyperopt parameters for 9201
   short_condition_9201_enable = CategoricalParameter([True, False], default=True, space="opt_9201", optimize=True)
-  short_condition_9201_adx_min = IntParameter(20, 35, default=25, space="opt_9201", optimize=True)
-  short_condition_9201_adx_max = IntParameter(50, 80, default=70, space="opt_9201", optimize=True)
-  short_condition_9201_minus_di_min = IntParameter(20, 35, default=25, space="opt_9201", optimize=True)
-  short_condition_9201_mfi_max = IntParameter(30, 50, default=40, space="opt_9201", optimize=True)
-  short_condition_9201_rsi_1h_min = IntParameter(15, 30, default=20, space="opt_9201", optimize=True)
-  short_condition_9201_rsi_1h_max = IntParameter(45, 60, default=50, space="opt_9201", optimize=True)
-  short_condition_9201_volume_factor = DecimalParameter(0.8, 1.5, default=1.0, decimals=1, space="opt_9201", optimize=True)
-  short_condition_9201_ema_ribbon_enable = CategoricalParameter([0, 1], default=1, space="opt_9201", optimize=True)
-  short_condition_9201_1h_confirmation_enable = CategoricalParameter([0, 1], default=1, space="opt_9201", optimize=True)
+  short_condition_9201_adx_min = IntParameter(15, 35, default=20, space="opt_9201", optimize=True)
+  short_condition_9201_adx_max = IntParameter(50, 90, default=80, space="opt_9201", optimize=True)
+  short_condition_9201_minus_di_min = IntParameter(15, 35, default=20, space="opt_9201", optimize=True)
+  short_condition_9201_mfi_max = IntParameter(35, 60, default=50, space="opt_9201", optimize=True)
+  short_condition_9201_rsi_1h_min = IntParameter(10, 30, default=15, space="opt_9201", optimize=True)
+  short_condition_9201_rsi_1h_max = IntParameter(50, 70, default=60, space="opt_9201", optimize=True)
+  short_condition_9201_volume_factor = DecimalParameter(0.5, 1.5, default=0.8, decimals=1, space="opt_9201", optimize=True)
+  short_condition_9201_ema_ribbon_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
+  short_condition_9201_1h_confirmation_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
 
   # Phase1 advanced
-  short_condition_9201_atr_min = DecimalParameter(0.8, 2.5, default=1.5, decimals=1, space="opt_9201", optimize=True)
-  short_condition_9201_bb_width_min = DecimalParameter(2.0, 5.0, default=3.0, decimals=1, space="opt_9201", optimize=True)
-  short_condition_9201_adx_slope_enable = CategoricalParameter([0, 1], default=1, space="opt_9201", optimize=True)
-  short_condition_9201_supertrend_enable = CategoricalParameter([0, 1], default=1, space="opt_9201", optimize=True)
-  short_condition_9201_obv_enable = CategoricalParameter([0, 1], default=1, space="opt_9201", optimize=True)
-  short_condition_9201_stochrsi_min = IntParameter(40, 70, default=50, space="opt_9201", optimize=True)
-  short_condition_9201_willr_min = IntParameter(-40, -10, default=-20, space="opt_9201", optimize=True)
-  short_condition_9201_willr_max = IntParameter(-90, -70, default=-80, space="opt_9201", optimize=True)
-  short_condition_9201_vwap_enable = CategoricalParameter([0, 1], default=1, space="opt_9201", optimize=True)
-  short_condition_9201_volume_relative_min = DecimalParameter(1.0, 2.0, default=1.2, decimals=1, space="opt_9201", optimize=True)
-  short_condition_9201_roc_max = IntParameter(-5, 0, default=-1, space="opt_9201", optimize=True)
-  short_condition_9201_cmo_max = IntParameter(-20, -5, default=-10, space="opt_9201", optimize=True)
+  short_condition_9201_atr_min = DecimalParameter(0.5, 2.5, default=1.0, decimals=1, space="opt_9201", optimize=True)
+  short_condition_9201_bb_width_min = DecimalParameter(1.5, 5.0, default=2.0, decimals=1, space="opt_9201", optimize=True)
+  short_condition_9201_adx_slope_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
+  short_condition_9201_supertrend_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
+  short_condition_9201_obv_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
+  short_condition_9201_stochrsi_min = IntParameter(30, 70, default=40, space="opt_9201", optimize=True)
+  short_condition_9201_willr_min = IntParameter(-50, -10, default=-30, space="opt_9201", optimize=True)
+  short_condition_9201_willr_max = IntParameter(-100, -60, default=-85, space="opt_9201", optimize=True)
+  short_condition_9201_vwap_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
+  short_condition_9201_volume_relative_min = DecimalParameter(0.8, 2.0, default=1.0, decimals=1, space="opt_9201", optimize=True)
+  short_condition_9201_roc_max = IntParameter(-3, 2, default=0, space="opt_9201", optimize=True)
+  short_condition_9201_cmo_max = IntParameter(-15, 0, default=-5, space="opt_9201", optimize=True)
   bearrider_regime_volatility_threshold = DecimalParameter(0.8, 2.5, default=1.2, decimals=1, space="opt_9201", optimize=True)
+  
+  # New enable flags for more optional conditions
+  short_condition_9201_volatility_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
+  short_condition_9201_adx_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
+  short_condition_9201_directional_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
+  short_condition_9201_sar_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
 
   # Entry signal params
   short_entry_signal_params = {
@@ -334,29 +342,33 @@ class Test9201(IStrategy):
     if self.bearrider_phase2_enable.value:
       short_entry_logic.append((df.get("be_regime_trending") == True) | (df.get("be_regime_trending").isna()))
 
-    # Layer 1 - Volatility
-    short_entry_logic.append(df.get("ATR_percent", 0.0).fillna(0.0) > self.short_condition_9201_atr_min.value)
-    short_entry_logic.append(df.get("BB_width_20", 0.0).fillna(0.0) > self.short_condition_9201_bb_width_min.value)
+    # Layer 1 - Volatility (optional)
+    if self.short_condition_9201_volatility_enable.value:
+      short_entry_logic.append(df.get("ATR_percent", 0.0).fillna(0.0) > self.short_condition_9201_atr_min.value)
+      short_entry_logic.append(df.get("BB_width_20", 0.0).fillna(0.0) > self.short_condition_9201_bb_width_min.value)
 
-    # Layer 2 - ADX strength
-    short_entry_logic.append(
-      (df.get("ADX_14", 0.0).fillna(0.0) > self.short_condition_9201_adx_min.value)
-      & (df.get("ADX_14", 0.0).fillna(0.0) < self.short_condition_9201_adx_max.value)
-    )
-    if self.short_condition_9201_adx_slope_enable.value:
-      short_entry_logic.append(df.get("ADX_slope", 0.0).fillna(0.0) > 0)
+    # Layer 2 - ADX strength (optional)
+    if self.short_condition_9201_adx_enable.value:
+      short_entry_logic.append(
+        (df.get("ADX_14", 0.0).fillna(0.0) > self.short_condition_9201_adx_min.value)
+        & (df.get("ADX_14", 0.0).fillna(0.0) < self.short_condition_9201_adx_max.value)
+      )
+      if self.short_condition_9201_adx_slope_enable.value:
+        short_entry_logic.append(df.get("ADX_slope", 0.0).fillna(0.0) > 0)
 
-    # Layer 3 - Directional
-    short_entry_logic.append(
-      df.get("MINUS_DI_14", 0.0).fillna(0.0) > df.get("PLUS_DI_14", 0.0).fillna(0.0)
-    )
-    short_entry_logic.append(df.get("MINUS_DI_14", 0.0).fillna(0.0) > self.short_condition_9201_minus_di_min.value)
+    # Layer 3 - Directional (optional)
+    if self.short_condition_9201_directional_enable.value:
+      short_entry_logic.append(
+        df.get("MINUS_DI_14", 0.0).fillna(0.0) > df.get("PLUS_DI_14", 0.0).fillna(0.0)
+      )
+      short_entry_logic.append(df.get("MINUS_DI_14", 0.0).fillna(0.0) > self.short_condition_9201_minus_di_min.value)
 
-    # Layer 4 - Trend persistence
+    # Layer 4 - Trend persistence (optional)
     if self.short_condition_9201_supertrend_enable.value:
       short_entry_logic.append(df.get("ST_10_3", 0.0).fillna(0.0) < 0)
       short_entry_logic.append(df.get("ST_11_2", 0.0).fillna(0.0) < 0)
-    short_entry_logic.append(df.get("close", 0.0) < df.get("SAR", 0.0).fillna(0.0))
+    if self.short_condition_9201_sar_enable.value:
+      short_entry_logic.append(df.get("close", 0.0) < df.get("SAR", 0.0).fillna(0.0))
 
     # Layer 5 - Order flow
     if self.short_condition_9201_obv_enable.value:
@@ -375,13 +387,14 @@ class Test9201(IStrategy):
       & (df.get("WILLR_14", 0.0).fillna(0.0) < self.short_condition_9201_willr_min.value)
     )
     short_entry_logic.append(df.get("ROC_9", 0.0).fillna(0.0) < self.short_condition_9201_roc_max.value)
-    short_entry_logic.append(df.get("MOM_10", 0.0).fillna(0.0) < 0)
+    # Removed strict MOM < 0 requirement - too restrictive
     short_entry_logic.append(df.get("CMO_14", 0.0).fillna(0.0) < self.short_condition_9201_cmo_max.value)
 
     # Layer 7 - Money flow
     short_entry_logic.append(df.get("MFI_14", 100.0).fillna(100.0) < self.short_condition_9201_mfi_max.value)
+    # Relaxed RSI range to allow more entries
     short_entry_logic.append(
-      (df.get("RSI_14", 0.0).fillna(0.0) > 25.0) & (df.get("RSI_14", 0.0).fillna(0.0) < 70.0)
+      (df.get("RSI_14", 0.0).fillna(0.0) > 20.0) & (df.get("RSI_14", 0.0).fillna(0.0) < 75.0)
     )
 
     # Layer 8 - EMA ribbon
@@ -391,12 +404,10 @@ class Test9201(IStrategy):
         & (df.get("EMA_8", 0.0).fillna(0.0) < df.get("EMA_21", 0.0).fillna(0.0))
       )
 
-    # Layer 9 - Enhanced volume
+    # Layer 9 - Enhanced volume (relaxed requirements)
     if self.short_condition_9201_vwap_enable.value:
       short_entry_logic.append(df.get("close", 0.0) < df.get("VWAP", 0.0).fillna(0.0))
-    short_entry_logic.append(df.get("VO", 0.0).fillna(0.0) > 0)
-    short_entry_logic.append(df.get("NVI", 0.0).fillna(0.0) < df.get("NVI_EMA_255", 0.0).fillna(0.0))
-    short_entry_logic.append(df.get("PVT_slope", 0.0).fillna(0.0) < 0)
+    # Removed strict VO and NVI requirements - too restrictive
     short_entry_logic.append(df.get("volume_relative", 0.0).fillna(0.0) > self.short_condition_9201_volume_relative_min.value)
     short_entry_logic.append(df["volume"] > (df.get("volume_mean_12", 0.0).fillna(0.0) * self.short_condition_9201_volume_factor.value))
 
