@@ -7,6 +7,7 @@ source .venv/bin/activate
 STRATEGY="Test9201"
 CONFIG1="user_data/private_config.json"
 CONFIG2="configs/pairlist-hyperopt-static-binance-futures-usdt.json"
+CONFIG3="configs/config.json"
 TIMERANGE="20240101-20251101"
 TIMEFRAMES="5m 1h 15m 4h 1d"
 
@@ -33,6 +34,7 @@ download_data() {
     --trading-mode futures \
     --config "$CONFIG1" \
     --config "$CONFIG2" \
+    --config "$CONFIG3" \
     --timeframes $TIMEFRAMES \
     --timerange "$TIMERANGE" \
     --prepend
@@ -48,6 +50,7 @@ run_hyperopt() {
     --strategy "$STRATEGY" \
     --config "$CONFIG1" \
     --config "$CONFIG2" \
+    --config "$CONFIG3" \
     --timerange "$TIMERANGE" \
     --epochs 200 \
     --spaces opt_9201 roi stoploss \
@@ -65,6 +68,7 @@ run_backtest() {
     --strategy "$STRATEGY" \
     --config "$CONFIG1" \
     --config "$CONFIG2" \
+    --config "$CONFIG3" \
     --timerange "$TIMERANGE" \
     --breakdown month
   echo ""
