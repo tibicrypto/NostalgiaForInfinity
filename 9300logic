@@ -1,0 +1,112 @@
+Tao stragey name 9300 với logic sau:
+Dưới đây là thiết kế "Bot Scalping Breakout Đồng Pha" dựa trên các quy tắc chúng ta đã thảo luận, được viết dưới dạng mã giả (pseudocode) mà bạn có thể cung cấp cho lập trình viên hoặc tự cấu hình trong các nền tảng (như TradingView, 3Commas, hay các bot Python).
+🤖 Thiết kế Bot: "Scalping Breakouta Đồng Pha"
+1. ⚙️ Các Tham số (Parameters)
+Đây là các biến số đầu vào mà bot sử dụng. Bạn có thể (và nên) điều chỉnh các con số này thông qua backtest để tìm ra giá trị tối ưu cho từng cặp coin và khung thời gian.
+Khung H1 (Xu hướng):
+ * H1_EMA_Period: 50
+ * H1_RSI_Period: 14
+ * H1_RSI_Level: 50 (Ngưỡng phân định xu hướng)
+Khung 15m (Thiết lập Vùng Nén):
+ * M15_BB_Period: 20
+ * M15_BB_StdDev: 2
+ * M15_BBW_Lookback: 100 (Số nến để tìm BBW thấp nhất)
+ * M15_BBW_Percentile: 10 (Squeeze = 10% thấp nhất trong M15_BBW_Lookback nến)
+ * M15_Vol_MA_Period: 50
+Khung 5m (Kích hoạt Breakout):
+ * M5_BB_Period: 20
+ * M5_BB_StdDev: 2
+ * M5_RSI_Period: 14
+ * M5_RSI_Trigger_Level: 55 (Ngưỡng kích hoạt động lượng MUA, 45 cho BÁN)
+ * M5_Vol_MA_Period: 50
+ * M5_Vol_Spike_Multiplier: 2.0 (Volume breakout phải cao gấp 2 lần MA)
+Quản lý Rủi ro:
+ * SL_ATR_Period: 14 (Sử dụng ATR trên khung 5m)
+ * SL_ATR_Multiplier: 1.5 (Đặt SL = 1.5 lần ATR)
+ * RR_Ratio: 1.5 (Tỷ lệ Risk:Reward, Chốt lời = 1.5 lần rủi ro)
+2. 📈 Logic Lệnh MUA (Long) - Mã giả
+Bot sẽ thực thi kiểm tra này tại mỗi lần nến 5m đóng cửa:
+// BƯỚC 1: KIỂM TRA KHUNG H1 (XU HƯỚNG)
+// Lấy dữ liệu H1
+H1_Close = GetClose(H1)
+H1_EMA     = EMA(H1, H1_EMA_Period)
+H1_RSI     = RSI(H1, H1_RSI_Period)
+
+// Điều kiện H1
+bool H1_Uptrend = (H1_Close > H1_EMA) AND (H1_RSI > H1_RSI_Level)
+
+// Nếu H1 không phải Tăng, dừng lại, không làm gì cả
+IF (H1_Uptrend == false) THEN
+    RETURN
+
+// BƯỚC 2: KIỂM TRA KHUNG 15M (VÙNG NÉN)
+// Lấy dữ liệu 15m
+M15_BB_Upper   = BB_Upper(M15, M15_BB_Period, M15_BB_StdDev)
+M15_BB_Lower   = BB_Lower(M15, M15_BB_Period, M15_BB_StdDev)
+M15_BB_Middle  = BB_Middle(M15, M15_BB_Period, M15_BB_StdDev)
+M15_Volume     = Volume(M15)
+M15_Vol_MA     = SMA(Volume(M15), M15_Vol_MA_Period)
+
+// Lượng hóa "Vùng Nén" (BB Squeeze)
+M15_BBW          = (M15_BB_Upper - M15_BB_Lower) / M15_BB_Middle
+M15_BBW_Min_Hist = Percentile(BBW(M15), M15_BBW_Lookback, M15_BBW_Percentile)
+
+// Điều kiện 15m
+bool M15_IsSqueeze = (M15_BBW <= M15_BBW_Min_Hist)
+bool M15_LowVolume = (M15_Volume < M15_Vol_MA)
+
+// Nếu 15m không nén VÀ volume thấp, dừng lại
+IF (M15_IsSqueeze == false) OR (M15_LowVolume == false) THEN
+    RETURN
+
+// BƯỚC 3: KIỂM TRA KÍCH HOẠT KHUNG 5M (BREAKOUT)
+// Lấy dữ liệu 5m (nến vừa đóng cửa)
+M5_Close        = GetClose(M5)
+M5_BB_Upper     = BB_Upper(M5, M5_BB_Period, M5_BB_StdDev)
+M5_RSI          = RSI(M5, M5_RSI_Period)
+M5_Volume       = Volume(M5)
+M5_Vol_MA       = SMA(Volume(M5), M5_Vol_MA_Period)
+
+// Lấy dữ liệu nến 5m TRƯỚC ĐÓ (để đảm bảo đây là cú breakout)
+M5_Prev_Close   = GetClose(M5, 1) // Nến [1] (nến trước)
+M5_Prev_BB_Upper = BB_Upper(M5, M5_BB_Period, M5_BB_StdDev, 1) // BB nến [1]
+
+// Điều kiện 5m
+bool M5_Breakout     = (M5_Prev_Close < M5_Prev_BB_Upper) AND (M5_Close > M5_BB_Upper) // Giá vừa cắt LÊN dải BB
+bool M5_VolumeSpike  = (M5_Volume > (M5_Vol_MA * M5_Vol_Spike_Multiplier))
+bool M5_Momentum     = (M5_RSI > M5_RSI_Trigger_Level)
+
+// BƯỚC 4: VÀO LỆNH
+// Nếu tất cả điều kiện đều đúng
+IF (M5_Breakout AND M5_VolumeSpike AND M5_Momentum) THEN
+    // Tính toán SL và TP
+    Entry_Price = M5_Close
+    M5_ATR      = ATR(M5, SL_ATR_Period)
+    SL_Amount   = M5_ATR * SL_ATR_Multiplier
+    TP_Amount   = SL_Amount * RR_Ratio
+
+    SL_Price = Entry_Price - SL_Amount
+    TP_Price = Entry_Price + TP_Amount
+
+    // Gửi lệnh
+    Place_Order(Type: MUA, Entry: Entry_Price, StopLoss: SL_Price, TakeProfit: TP_Price)
+END IF
+
+3. 📉 Logic Lệnh BÁN (Short)
+Quy trình tương tự, chỉ đảo ngược các điều kiện:
+ * H1: H1_Close < H1_EMA VÀ H1_RSI < H1_RSI_Level
+ * 15m: M15_IsSqueeze == true VÀ M15_LowVolume == true (Giống lệnh MUA)
+ * 5m:
+   * M5_Breakdown: (M5_Prev_Close > M5_Prev_BB_Lower) VÀ (M5_Close < M5_BB_Lower) (Giá vừa cắt XUỐNG)
+   * M5_VolumeSpike: (M5_Volume > (M5_Vol_MA * M5_Vol_Spike_Multiplier))
+   * M5_Momentum: (M5_RSI < (100 - M5_RSI_Trigger_Level)) (Ví dụ: < 45)
+ * Đặt lệnh BÁN (Short):
+   * Entry_Price: M5_Close
+   * SL_Price: Entry_Price + SL_Amount
+   * TP_Price: Entry_Price - TP_Amount
+4. ⚠️ Lưu ý Cực kỳ Quan trọng cho Bot
+ * Đơn giản hóa S/R: Chiến lược này đã đơn giản hóa bộ lọc "không gian" (khoảng trống tới S/R H1). Thay vì tự động phát hiện S/R (rất phức tạp cho bot), chúng ta chấp nhận rủi ro và tin tưởng vào tỷ lệ R:R (1:1.5) cố định. Đây là một sự đánh đổi để tự động hóa.
+ * Lượng hóa Vùng Nén (Squeeze): Việc sử dụng Bollinger Band Width (BBW) và so sánh nó với Percentile (phần trăm) lịch sử là cách tốt nhất để lượng hóa "vùng nén" một cách khách quan cho bot.
+ * Lượng hóa Volume: Luôn luôn so sánh volume hiện tại với Trung bình động (SMA/MA) của nó. Con số "gấp 2 lần" (M5_Vol_Spike_Multiplier = 2.0) là một điểm khởi đầu tốt cho "đột biến".
+ * Backtest (Kiểm tra lại): Tuyệt đối không chạy bot bằng tiền thật trước khi backtest chiến lược này trên dữ liệu lịch sử. Bạn cần chạy backtest để tối ưu hóa các tham số (ví dụ: RR_Ratio có thể là 1.5, 2.0, hay 1.8? SL_ATR_Multiplier có thể là 1.5 hay 2.0?).
+Bạn có muốn tôi giải thích rõ hơn về cách thức hoạt động của bất kỳ phần logic nào, ví dụ như cách tính BBW Percentile không?
