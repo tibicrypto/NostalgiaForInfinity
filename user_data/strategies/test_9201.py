@@ -32,13 +32,13 @@ class Test9201(IStrategy):
     return "v1.0.0-test9201"
 
   # Stoploss hyperopt parameter (use --spaces sell to optimize, included in default spaces)
-  stoploss = DecimalParameter(-0.50, -0.01, default=-0.15, decimals=2, space="sell", optimize=True)
+  stoploss = DecimalParameter(-0.50, -0.01, default=-0.12, decimals=2, space="stoploss", optimize=True)
   can_short = True
   # Trailing stoploss (not used)
-  trailing_stop = False
+  trailing_stop = True
   trailing_only_offset_is_reached = True
-  trailing_stop_positive = 0.01
-  trailing_stop_positive_offset = 0.03
+  trailing_stop_positive = 0.015
+  trailing_stop_positive_offset = 0.035
 
   use_custom_stoploss = False
   stoploss_on_exchange = False
@@ -80,7 +80,7 @@ class Test9201(IStrategy):
   short_bearrider_mode_name = "short_bearrider"
 
   # BearRider (9201) configuration and hyperopt parameters
-  bearrider_phase2_enable = CategoricalParameter([True, False], default=True, space="sell", optimize=True)
+  bearrider_phase2_enable = CategoricalParameter([True, False], default=False, space="sell", optimize=True)
 
   # Stop thresholds
   stop_threshold_bearrider_spot = 0.15
@@ -98,17 +98,17 @@ class Test9201(IStrategy):
   roi_2_time = IntParameter(60, 1440, default=1440, space="roi", optimize=True)
 
   # Default minimal ROI - will be overridden by hyperopt
-  minimal_roi = {"0": 0.03, "30": 0.01, "1440": 0.005}
+  minimal_roi = {"0": 0.05, "30": 0.02, "60": 0.01, "1440": 0.005}
 
   # Hyperopt parameters for 9201
   short_condition_9201_enable = CategoricalParameter([True, False], default=True, space="opt_9201", optimize=True)
   short_condition_9201_adx_min = IntParameter(15, 35, default=20, space="opt_9201", optimize=True)
   short_condition_9201_adx_max = IntParameter(50, 90, default=80, space="opt_9201", optimize=True)
   short_condition_9201_minus_di_min = IntParameter(15, 35, default=20, space="opt_9201", optimize=True)
-  short_condition_9201_mfi_max = IntParameter(35, 60, default=50, space="opt_9201", optimize=True)
+  short_condition_9201_mfi_max = IntParameter(35, 70, default=60, space="opt_9201", optimize=True)
   short_condition_9201_rsi_1h_min = IntParameter(10, 30, default=15, space="opt_9201", optimize=True)
   short_condition_9201_rsi_1h_max = IntParameter(50, 70, default=60, space="opt_9201", optimize=True)
-  short_condition_9201_volume_factor = DecimalParameter(0.5, 1.5, default=0.8, decimals=1, space="opt_9201", optimize=True)
+  short_condition_9201_volume_factor = DecimalParameter(0.3, 1.5, default=0.5, decimals=1, space="opt_9201", optimize=True)
   short_condition_9201_ema_ribbon_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
   short_condition_9201_1h_confirmation_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
 
@@ -118,13 +118,13 @@ class Test9201(IStrategy):
   short_condition_9201_adx_slope_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
   short_condition_9201_supertrend_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
   short_condition_9201_obv_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
-  short_condition_9201_stochrsi_min = IntParameter(30, 70, default=40, space="opt_9201", optimize=True)
-  short_condition_9201_willr_min = IntParameter(-50, -10, default=-30, space="opt_9201", optimize=True)
-  short_condition_9201_willr_max = IntParameter(-100, -60, default=-85, space="opt_9201", optimize=True)
+  short_condition_9201_stochrsi_min = IntParameter(20, 70, default=30, space="opt_9201", optimize=True)
+  short_condition_9201_willr_min = IntParameter(-60, -10, default=-20, space="opt_9201", optimize=True)
+  short_condition_9201_willr_max = IntParameter(-100, -50, default=-70, space="opt_9201", optimize=True)
   short_condition_9201_vwap_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
-  short_condition_9201_volume_relative_min = DecimalParameter(0.8, 2.0, default=1.0, decimals=1, space="opt_9201", optimize=True)
+  short_condition_9201_volume_relative_min = DecimalParameter(0.5, 2.0, default=0.7, decimals=1, space="opt_9201", optimize=True)
   short_condition_9201_roc_max = IntParameter(-3, 2, default=0, space="opt_9201", optimize=True)
-  short_condition_9201_cmo_max = IntParameter(-15, 0, default=-5, space="opt_9201", optimize=True)
+  short_condition_9201_cmo_max = IntParameter(-15, 5, default=0, space="opt_9201", optimize=True)
   bearrider_regime_volatility_threshold = DecimalParameter(0.8, 2.5, default=1.2, decimals=1, space="opt_9201", optimize=True)
   
   # New enable flags for more optional conditions
@@ -133,9 +133,40 @@ class Test9201(IStrategy):
   short_condition_9201_directional_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
   short_condition_9201_sar_enable = CategoricalParameter([0, 1], default=0, space="opt_9201", optimize=True)
 
+  # Hyperopt parameters for 9101 Long
+  long_condition_9101_enable = CategoricalParameter([True, False], default=True, space="opt_9101_long", optimize=True)
+  long_condition_9101_adx_min = IntParameter(15, 35, default=20, space="opt_9101_long", optimize=True)
+  long_condition_9101_adx_max = IntParameter(50, 90, default=80, space="opt_9101_long", optimize=True)
+  long_condition_9101_plus_di_min = IntParameter(15, 35, default=20, space="opt_9101_long", optimize=True)
+  long_condition_9101_mfi_min = IntParameter(30, 65, default=40, space="opt_9101_long", optimize=True)
+  long_condition_9101_rsi_1h_min = IntParameter(10, 30, default=15, space="opt_9101_long", optimize=True)
+  long_condition_9101_rsi_1h_max = IntParameter(50, 70, default=60, space="opt_9101_long", optimize=True)
+  long_condition_9101_volume_factor = DecimalParameter(0.3, 1.5, default=0.5, decimals=1, space="opt_9101_long", optimize=True)
+  long_condition_9101_ema_ribbon_enable = CategoricalParameter([0, 1], default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_1h_confirmation_enable = CategoricalParameter([0, 1], default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_atr_min = DecimalParameter(0.5, 2.5, default=1.0, decimals=1, space="opt_9101_long", optimize=True)
+  long_condition_9101_bb_width_min = DecimalParameter(1.5, 5.0, default=2.0, decimals=1, space="opt_9101_long", optimize=True)
+  long_condition_9101_adx_slope_enable = CategoricalParameter([0, 1], default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_supertrend_enable = CategoricalParameter([0, 1], default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_obv_enable = CategoricalParameter([0, 1], default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_stochrsi_max = IntParameter(30, 80, default=70, space="opt_9101_long", optimize=True)
+  long_condition_9101_willr_min = IntParameter(-40, -10, default=-20, space="opt_9101_long", optimize=True)
+  long_condition_9101_willr_max = IntParameter(-100, -50, default=-70, space="opt_9101_long", optimize=True)
+  long_condition_9101_vwap_enable = CategoricalParameter([0, 1], default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_volume_relative_min = DecimalParameter(0.5, 2.0, default=0.7, decimals=1, space="opt_9101_long", optimize=True)
+  long_condition_9101_roc_min = IntParameter(-2, 3, default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_cmo_min = IntParameter(-10, 15, default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_volatility_enable = CategoricalParameter([0, 1], default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_adx_enable = CategoricalParameter([0, 1], default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_directional_enable = CategoricalParameter([0, 1], default=0, space="opt_9101_long", optimize=True)
+  long_condition_9101_sar_enable = CategoricalParameter([0, 1], default=0, space="opt_9101_long", optimize=True)
+
   # Entry signal params
   short_entry_signal_params = {
     "short_entry_condition_9201_enable": True,
+  }
+  long_entry_signal_params = {
+    "long_entry_condition_9101_enable": True,
   }
 
   def __init__(self, config: dict) -> None:
@@ -320,13 +351,112 @@ class Test9201(IStrategy):
     return df
 
   def populate_entry_trend(self, df: DataFrame, metadata: dict) -> DataFrame:
-    """Populate entry signals for BearRider 9201"""
+    """Populate entry signals for BearRider 9201 (Short) and BullRider (Long)"""
     df.loc[:, "enter_long"] = 0
     df.loc[:, "enter_short"] = 0
     df.loc[:, "enter_tag"] = ""
 
-    short_entry_logic = []
     allowed_empty_candles_288 = 24
+
+    # ============== LONG ENTRY LOGIC ==============
+    if self.long_condition_9101_enable.value:
+      long_entry_logic = []
+      
+      # Basic protections
+      long_entry_logic.append(df["num_empty_288"] <= allowed_empty_candles_288)
+      long_entry_logic.append((df["protections_short_global"] == True) | (df["protections_short_global"].isna()))
+      long_entry_logic.append((df["global_protections_short_pump"] == True) | (df["global_protections_short_pump"].isna()))
+      long_entry_logic.append((df["global_protections_short_dump"] == True) | (df["global_protections_short_dump"].isna()))
+
+      # Phase2 regime requirement (optional)
+      if self.bearrider_phase2_enable.value:
+        long_entry_logic.append((df.get("be_regime_trending") == True) | (df.get("be_regime_trending").isna()))
+
+      # Layer 1 - Volatility (optional)
+      if self.long_condition_9101_volatility_enable.value:
+        long_entry_logic.append(df.get("ATR_percent", 0.0).fillna(0.0) > self.long_condition_9101_atr_min.value)
+        long_entry_logic.append(df.get("BB_width_20", 0.0).fillna(0.0) > self.long_condition_9101_bb_width_min.value)
+
+      # Layer 2 - ADX strength (optional)
+      if self.long_condition_9101_adx_enable.value:
+        long_entry_logic.append(
+          (df.get("ADX_14", 0.0).fillna(0.0) > self.long_condition_9101_adx_min.value)
+          & (df.get("ADX_14", 0.0).fillna(0.0) < self.long_condition_9101_adx_max.value)
+        )
+        if self.long_condition_9101_adx_slope_enable.value:
+          long_entry_logic.append(df.get("ADX_slope", 0.0).fillna(0.0) > 0)
+
+      # Layer 3 - Directional (optional) - PLUS_DI > MINUS_DI
+      if self.long_condition_9101_directional_enable.value:
+        long_entry_logic.append(
+          df.get("PLUS_DI_14", 0.0).fillna(0.0) > df.get("MINUS_DI_14", 0.0).fillna(0.0)
+        )
+        long_entry_logic.append(df.get("PLUS_DI_14", 0.0).fillna(0.0) > self.long_condition_9101_plus_di_min.value)
+
+      # Layer 4 - Trend persistence (optional) - SuperTrend > 0
+      if self.long_condition_9101_supertrend_enable.value:
+        long_entry_logic.append(df.get("ST_10_3", 0.0).fillna(0.0) > 0)
+        long_entry_logic.append(df.get("ST_11_2", 0.0).fillna(0.0) > 0)
+      if self.long_condition_9101_sar_enable.value:
+        long_entry_logic.append(df.get("close", 0.0) > df.get("SAR", 0.0).fillna(0.0))
+
+      # Layer 5 - Order flow - Inverted
+      if self.long_condition_9101_obv_enable.value:
+        long_entry_logic.append(df.get("OBV", 0.0).fillna(0.0) > df.get("OBV_EMA_20", 0.0).fillna(0.0))
+        long_entry_logic.append(df.get("AD_slope", 0.0).fillna(0.0) > 0)
+        long_entry_logic.append(df.get("VPT", 0.0).fillna(0.0) > df.get("VPT_EMA_20", 0.0).fillna(0.0))
+        long_entry_logic.append(df.get("EOM_14", 0.0).fillna(0.0) > 0)
+
+      # Layer 6 - Advanced momentum - Inverted
+      long_entry_logic.append(
+        (df.get("STOCHRSIk_14_14_3_3", 0.0).fillna(0.0) < self.long_condition_9101_stochrsi_max.value)
+        & (df.get("STOCHRSIk_14_14_3_3", 0.0).fillna(0.0) > df.get("STOCHRSId_14_14_3_3", 0.0).fillna(0.0))
+      )
+      long_entry_logic.append(
+        (df.get("WILLR_14", 0.0).fillna(0.0) < self.long_condition_9101_willr_max.value)
+        & (df.get("WILLR_14", 0.0).fillna(0.0) > self.long_condition_9101_willr_min.value)
+      )
+      long_entry_logic.append(df.get("ROC_9", 0.0).fillna(0.0) > self.long_condition_9101_roc_min.value)
+      long_entry_logic.append(df.get("CMO_14", 0.0).fillna(0.0) > self.long_condition_9101_cmo_min.value)
+
+      # Layer 7 - Money flow - Inverted: MFI > min
+      long_entry_logic.append(df.get("MFI_14", 0.0).fillna(0.0) > self.long_condition_9101_mfi_min.value)
+      long_entry_logic.append(
+        (df.get("RSI_14", 0.0).fillna(0.0) > 20.0) & (df.get("RSI_14", 0.0).fillna(0.0) < 85.0)
+      )
+
+      # Layer 8 - EMA ribbon - Inverted: close > EMA8 > EMA21
+      if self.long_condition_9101_ema_ribbon_enable.value:
+        long_entry_logic.append(
+          (df.get("close", 0.0) > df.get("EMA_8", 0.0).fillna(0.0))
+          & (df.get("EMA_8", 0.0).fillna(0.0) > df.get("EMA_21", 0.0).fillna(0.0))
+        )
+
+      # Layer 9 - Enhanced volume
+      if self.long_condition_9101_vwap_enable.value:
+        long_entry_logic.append(df.get("close", 0.0) > df.get("VWAP", 0.0).fillna(0.0))
+      long_entry_logic.append(df.get("volume_relative", 0.0).fillna(0.0) > self.long_condition_9101_volume_relative_min.value)
+      long_entry_logic.append(df["volume"] > (df.get("volume_mean_12", 0.0).fillna(0.0) * self.long_condition_9101_volume_factor.value))
+
+      # Layer 10 - 1h confirmation
+      if self.long_condition_9101_1h_confirmation_enable.value:
+        long_entry_logic.append(df.get("close", 0.0) > df.get("EMA_200_1h", 0.0).fillna(0.0))
+        long_entry_logic.append(
+          (df.get("RSI_14_1h", 50.0).fillna(50.0) > self.long_condition_9101_rsi_1h_min.value)
+          & (df.get("RSI_14_1h", 50.0).fillna(50.0) < self.long_condition_9101_rsi_1h_max.value)
+        )
+        long_entry_logic.append(df.get("CMF_20_1h", 0.0).fillna(0.0) > 0)
+
+      # Final volume check
+      long_entry_logic.append(df["volume"] > 0)
+
+      # Combine all conditions
+      item_long_entry = reduce(lambda x, y: x & y, long_entry_logic)
+      df.loc[item_long_entry, "enter_tag"] += "9201_long "
+      df.loc[item_long_entry, "enter_long"] = 1
+
+    # ============== SHORT ENTRY LOGIC ==============
+    short_entry_logic = []
 
     # Only execute if enabled
     if not self.short_condition_9201_enable.value:
@@ -394,7 +524,7 @@ class Test9201(IStrategy):
     short_entry_logic.append(df.get("MFI_14", 100.0).fillna(100.0) < self.short_condition_9201_mfi_max.value)
     # Relaxed RSI range to allow more entries
     short_entry_logic.append(
-      (df.get("RSI_14", 0.0).fillna(0.0) > 20.0) & (df.get("RSI_14", 0.0).fillna(0.0) < 75.0)
+      (df.get("RSI_14", 0.0).fillna(0.0) > 15.0) & (df.get("RSI_14", 0.0).fillna(0.0) < 80.0)
     )
 
     # Layer 8 - EMA ribbon
@@ -446,7 +576,7 @@ class Test9201(IStrategy):
     current_profit: float,
     **kwargs,
   ) -> Optional[str]:
-    """Custom exit logic for BearRider 9201"""
+    """Custom exit logic for BearRider 9201 (Short) and BullRider (Long) - Enhanced profit-taking"""
     try:
       df, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
     except Exception:
@@ -456,53 +586,202 @@ class Test9201(IStrategy):
       return None
 
     last_candle = df.iloc[-1].squeeze()
+    previous_candle = df.iloc[-2].squeeze()
     previous_candle_3 = df.iloc[-4].squeeze()
 
-    # Emergency oversold
+    # Calculate trade duration in minutes
+    trade_duration = (current_time - trade.open_date_utc).total_seconds() / 60.0
+    
+    # Determine if this is a long or short trade
+    is_short = trade.is_short if hasattr(trade, 'is_short') else False
+    
+    # ============== LONG POSITION EXIT LOGIC ==============
+    if not is_short:
+      if current_profit is not None and current_profit > 0:
+        # Quick profit exits (0.5% - 1.5%)
+        if 0.005 <= current_profit < 0.015:
+          if last_candle.get("RSI_14", 50.0) < 45.0:
+            return "exit_long_quick_rsi_falling"
+          if last_candle.get("MFI_14", 50.0) < 45.0:
+            return "exit_long_quick_mfi_falling"
+          if last_candle.get("OBV", 0.0) < last_candle.get("OBV_EMA_20", 0.0):
+            if previous_candle.get("OBV", 0.0) >= previous_candle.get("OBV_EMA_20", 0.0):
+              return "exit_long_quick_obv_cross"
+          if last_candle.get("close", 0.0) < last_candle.get("VWAP", 0.0):
+            return "exit_long_quick_vwap_break"
+          if last_candle.get("MINUS_DI_14", 0.0) > last_candle.get("PLUS_DI_14", 30.0):
+            return "exit_long_quick_di_reversal"
+        
+        # Medium profit exits (1.5% - 3%)
+        if 0.015 <= current_profit < 0.03:
+          if last_candle.get("RSI_14", 50.0) < 50.0:
+            return "exit_long_medium_rsi_neutral"
+          if last_candle.get("CMO_14", 10.0) < 5.0:
+            return "exit_long_medium_cmo_shift"
+          if last_candle.get("EMA_8", 0.0) < last_candle.get("EMA_21", 0.0):
+            return "exit_long_medium_ema_cross"
+          if last_candle.get("WILLR_14", -50.0) < -80.0:
+            return "exit_long_medium_willr_oversold"
+          if last_candle.get("RSI_14_1h", 0.0) < 45.0:
+            return "exit_long_medium_1h_weak"
+        
+        # Large profit exits (3%+)
+        if current_profit >= 0.03:
+          if last_candle.get("RSI_14", 50.0) < 55.0:
+            return "exit_long_large_rsi_falling"
+          if last_candle.get("close", 0.0) < last_candle.get("EMA_8", 0.0):
+            return "exit_long_large_ema8_break"
+          if last_candle.get("ST_10_3", 0.0) < 0:
+            return "exit_long_large_supertrend_bear"
+          if last_candle.get("ADX_14", 50.0) < 30.0:
+            return "exit_long_large_adx_weak"
+          if last_candle.get("STOCHRSIk_14_14_3_3", 0.0) < 70.0:
+            return "exit_long_large_stochrsi_falling"
+
+      # Emergency overbought exits
+      if last_candle.get("RSI_14", 0.0) > 85.0:
+        return "exit_long_emergency_rsi_overbought"
+      if last_candle.get("MFI_14", 0.0) > 90.0:
+        return "exit_long_emergency_mfi_overbought"
+      if last_candle.get("STOCHRSIk_14_14_3_3", 0.0) > 95.0:
+        return "exit_long_emergency_stochrsi_overbought"
+      if last_candle.get("WILLR_14", 0.0) > -2.0:
+        return "exit_long_emergency_willr_extreme"
+
+      # Strong reversal signals
+      if last_candle.get("close", 0.0) < last_candle.get("EMA_21", 0.0):
+        if previous_candle.get("close", 0.0) >= previous_candle.get("EMA_21", 0.0):
+          return "exit_long_reversal_ema21_cross"
+      
+      if last_candle.get("MINUS_DI_14", 0.0) > last_candle.get("PLUS_DI_14", 0.0):
+        return "exit_long_reversal_di_flip"
+      
+      if last_candle.get("close", 0.0) < last_candle.get("VWAP", 0.0):
+        if previous_candle.get("close", 0.0) >= previous_candle.get("VWAP", 0.0):
+          return "exit_long_reversal_vwap_cross"
+
+      # Momentum loss exits
+      if last_candle.get("ADX_14", 0.0) < 15.0:
+        return "exit_long_momentum_adx_weak"
+      
+      try:
+        if (previous_candle_3.get("ADX_14", 0.0) - last_candle.get("ADX_14", 0.0)) > 25.0:
+          return "exit_long_momentum_adx_drop"
+      except Exception:
+        pass
+
+      # 1h timeframe reversal protection
+      if last_candle.get("RSI_14_1h", 0.0) < 35.0:
+        return "exit_long_1h_rsi_low"
+      if last_candle.get("CMF_20_1h", 0.0) < -0.25:
+        return "exit_long_1h_cmf_low"
+      
+      # Long duration protection
+      if trade_duration > 60.0:
+        if current_profit is not None and current_profit < -0.005:
+          if last_candle.get("RSI_14", 0.0) < 50.0:
+            return "exit_long_duration_rsi_neutral"
+      
+      return None
+    
+    # ============== SHORT POSITION EXIT LOGIC ==============
+    # Enhanced profit-taking logic
+    if current_profit is not None and current_profit > 0:
+      
+      # Quick profit exits (0.5% - 1.5%) - Take profit on early signs of reversal
+      if 0.005 <= current_profit < 0.015:
+        # Exit if momentum is weakening
+        if last_candle.get("RSI_14", 50.0) > 55.0:
+          return "exit_quick_rsi_rising"
+        if last_candle.get("MFI_14", 50.0) > 55.0:
+          return "exit_quick_mfi_rising"
+        # Exit if OBV shows buying pressure
+        if last_candle.get("OBV", 0.0) > last_candle.get("OBV_EMA_20", 0.0):
+          if previous_candle.get("OBV", 0.0) <= previous_candle.get("OBV_EMA_20", 0.0):
+            return "exit_quick_obv_cross"
+        # Exit if VWAP bounce
+        if last_candle.get("close", 0.0) > last_candle.get("VWAP", 0.0):
+          return "exit_quick_vwap_break"
+        # Exit if directional indicator reversal
+        if last_candle.get("PLUS_DI_14", 0.0) > last_candle.get("MINUS_DI_14", 30.0):
+          return "exit_quick_di_reversal"
+      
+      # Medium profit exits (1.5% - 3%) - Lock in gains before major reversal
+      if 0.015 <= current_profit < 0.03:
+        # Exit if RSI bouncing strongly
+        if last_candle.get("RSI_14", 50.0) > 50.0:
+          return "exit_medium_rsi_neutral"
+        # Exit if CMO shows momentum shift
+        if last_candle.get("CMO_14", -10.0) > -5.0:
+          return "exit_medium_cmo_shift"
+        # Exit if EMA crossover happening
+        if last_candle.get("EMA_8", 0.0) > last_candle.get("EMA_21", 0.0):
+          return "exit_medium_ema_cross"
+        # Exit if WILLR oversold
+        if last_candle.get("WILLR_14", -50.0) > -20.0:
+          return "exit_medium_willr_oversold"
+        # Exit if 1h timeframe showing strength
+        if last_candle.get("RSI_14_1h", 0.0) > 55.0:
+          return "exit_medium_1h_strong"
+      
+      # Large profit exits (3%+) - Secure major gains
+      if current_profit >= 0.03:
+        # Exit on any sign of reversal
+        if last_candle.get("RSI_14", 50.0) > 45.0:
+          return "exit_large_rsi_rising"
+        if last_candle.get("close", 0.0) > last_candle.get("EMA_8", 0.0):
+          return "exit_large_ema8_break"
+        if last_candle.get("ST_10_3", 0.0) > 0:
+          return "exit_large_supertrend_bull"
+        # Exit if ADX declining (losing momentum)
+        if last_candle.get("ADX_14", 50.0) < 30.0:
+          return "exit_large_adx_weak"
+        # Exit if StochRSI oversold
+        if last_candle.get("STOCHRSIk_14_14_3_3", 100.0) > 30.0:
+          return "exit_large_stochrsi_rising"
+
+    # Emergency oversold exits - Exit before potential bounce
+    if last_candle.get("RSI_14", 100.0) < 15.0:
+      return "exit_emergency_rsi_oversold"
     if last_candle.get("MFI_14", 100.0) < 10.0:
-      return "exit_s9201_mfi_oversold"
-    if last_candle.get("RSI_14", 100.0) < 20.0:
-      return "exit_s9201_rsi_oversold"
-    if last_candle.get("STOCHRSIk_14_14_3_3", 100.0) < 20.0:
-      return "exit_s9201_stochrsi_oversold"
-    if last_candle.get("WILLR_14", 0.0) < -95.0:
-      return "exit_s9201_willr_extreme"
+      return "exit_emergency_mfi_oversold"
+    if last_candle.get("STOCHRSIk_14_14_3_3", 100.0) < 5.0:
+      return "exit_emergency_stochrsi_oversold"
+    if last_candle.get("WILLR_14", 0.0) < -98.0:
+      return "exit_emergency_willr_extreme"
 
-    # Reversal signals
+    # Strong reversal signals - Exit immediately
     if last_candle.get("close", 0.0) > last_candle.get("EMA_21", 0.0):
-      return "exit_s9201_ema21_break"
+      if previous_candle.get("close", 0.0) <= previous_candle.get("EMA_21", 0.0):
+        return "exit_reversal_ema21_cross"
+    
     if last_candle.get("PLUS_DI_14", 0.0) > last_candle.get("MINUS_DI_14", 0.0):
-      return "exit_s9201_di_reversal"
-    if last_candle.get("ST_10_3", 0.0) > 0:
-      return "exit_s9201_supertrend_bullish"
+      return "exit_reversal_di_flip"
+    
     if last_candle.get("close", 0.0) > last_candle.get("VWAP", 0.0):
-      return "exit_s9201_vwap_break"
+      if previous_candle.get("close", 0.0) <= previous_candle.get("VWAP", 0.0):
+        return "exit_reversal_vwap_cross"
 
-    # Momentum loss
-    if last_candle.get("ADX_14", 0.0) < 20.0:
-      return "exit_s9201_adx_weak"
+    # Momentum loss exits - Exit when trend weakening significantly
+    if last_candle.get("ADX_14", 0.0) < 15.0:
+      return "exit_momentum_adx_weak"
+    
     try:
-      if (previous_candle_3.get("ADX_14", 0.0) - last_candle.get("ADX_14", 0.0)) > 15.0:
-        return "exit_s9201_adx_drop"
+      if (previous_candle_3.get("ADX_14", 0.0) - last_candle.get("ADX_14", 0.0)) > 25.0:
+        return "exit_momentum_adx_drop"
     except Exception:
       pass
 
-    # 1h reversal
-    if last_candle.get("RSI_14_1h", 0.0) > 60.0:
-      return "exit_s9201_rsi_1h_high"
-    if last_candle.get("CMF_20_1h", 0.0) > 0.2:
-      return "exit_s9201_cmf_1h_high"
-
-    # Tiered profit exits
-    if current_profit is not None:
-      if 0.005 <= current_profit < 0.02:
-        if last_candle.get("OBV", 0.0) > last_candle.get("OBV_EMA_20", 0.0):
-          return "exit_s9201_profit_tier1"
-      if 0.02 <= current_profit < 0.05:
-        if last_candle.get("RSI_14", 0.0) > 60.0 or last_candle.get("EMA_8", 0.0) < last_candle.get("close", 0.0):
-          return "exit_s9201_profit_tier2"
-      if current_profit >= 0.05:
-        if last_candle.get("EMA_8", 0.0) < last_candle.get("close", 0.0):
-          return "exit_s9201_profit_tier3"
+    # 1h timeframe reversal protection
+    if last_candle.get("RSI_14_1h", 0.0) > 65.0:
+      return "exit_1h_rsi_high"
+    if last_candle.get("CMF_20_1h", 0.0) > 0.25:
+      return "exit_1h_cmf_high"
+    
+    # Long duration protection - If trade open too long and losing
+    if trade_duration > 60.0:  # More than 1 hour
+      if current_profit is not None and current_profit < -0.005:
+        if last_candle.get("RSI_14", 0.0) > 50.0:
+          return "exit_duration_rsi_neutral"
 
     return None

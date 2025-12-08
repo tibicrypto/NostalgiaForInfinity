@@ -5,10 +5,8 @@ source .venv/bin/activate
 
 # Configuration
 STRATEGY="Test9201"
-CONFIG1="user_data/private_config.json"
-CONFIG2="configs/pairlist-hyperopt-static-binance-futures-usdt.json"
-CONFIG3="configs/config.json"
-TIMERANGE="20240101-20251101"
+CONFIG_PAIRLIST="configs/pairlist-hyperopt-static-binance-futures-usdt.json"
+TIMERANGE="20250101-20251101"
 TIMEFRAMES="5m 1h 15m 4h 1d"
 
 # Menu for user selection
@@ -18,7 +16,7 @@ echo "========================================="
 echo ""
 echo "Select an option:"
 echo "  1) Download data only"
-echo "  2) Run hyperopt (200 epochs)"
+echo "  2) Run hyperopt (500 epochs)"
 echo "  3) Run backtest"
 echo "  4) Download data + hyperopt"
 echo "  5) Download data + backtest"
@@ -32,9 +30,7 @@ download_data() {
   freqtrade download-data \
     --exchange binance \
     --trading-mode futures \
-    --config "$CONFIG1" \
-    --config "$CONFIG2" \
-    --config "$CONFIG3" \
+    --config "$CONFIG_PAIRLIST" \
     --timeframes $TIMEFRAMES \
     --timerange "$TIMERANGE" \
     --prepend
@@ -48,14 +44,12 @@ run_hyperopt() {
   freqtrade hyperopt \
     --hyperopt-loss SharpeHyperOptLoss \
     --strategy "$STRATEGY" \
-    --config "$CONFIG1" \
-    --config "$CONFIG2" \
-    --config "$CONFIG3" \
+    --config "$CONFIG_PAIRLIST" \
     --timerange "$TIMERANGE" \
-    --epochs 200 \
-    --spaces opt_9201 roi stoploss \
+    --epochs 500 \
+    --spaces opt_9201 opt_9201_long stoploss\
     --random-state 42 \
-    -j 3
+    -j 2
   echo ""
   echo "Hyperopt completed!"
 }
@@ -66,9 +60,7 @@ run_backtest() {
   echo "Starting backtest..."
   freqtrade backtesting \
     --strategy "$STRATEGY" \
-    --config "$CONFIG1" \
-    --config "$CONFIG2" \
-    --config "$CONFIG3" \
+    --config "$CONFIG_PAIRLIST" \
     --timerange "$TIMERANGE" \
     --breakdown month
   echo ""
