@@ -51,8 +51,11 @@ class NostalgiaForInfinityX9400(IStrategy):
   def version(self) -> str:
     return "v1.0.0"
 
-  # Stoploss
+  # Stoploss - hyperopt
   stoploss = -0.15
+  
+  # Hyperopt parameters for stoploss
+  stoploss_hyperopt = DecimalParameter(-0.30, -0.05, default=-0.15, decimals=3, space="stoploss", optimize=True, load=True)
 
   # Trailing stoploss (not used)
   trailing_stop = False
@@ -114,6 +117,9 @@ class NostalgiaForInfinityX9400(IStrategy):
   short_condition_907_volume_5m_factor = DecimalParameter(1.3, 2.5, default=1.7, decimals=1, space="sell", optimize=True)
   short_condition_907_rsi_5m_min = IntParameter(20, 30, default=25, space="sell", optimize=True)
   short_condition_907_rsi_5m_max = IntParameter(40, 50, default=45, space="sell", optimize=True)
+
+  # Hyperopt parameters for leverage
+  leverage_hyperopt = DecimalParameter(1.0, 10.0, default=1.0, decimals=1, space="leverage", optimize=True, load=True)
 
   # Long/Short mode tags
   long_scalp_mode_tags = ["9400_long"]
@@ -464,4 +470,4 @@ class NostalgiaForInfinityX9400(IStrategy):
     """
     Customize leverage for each new trade
     """
-    return 1.0
+    return min(self.leverage_hyperopt.value, max_leverage)

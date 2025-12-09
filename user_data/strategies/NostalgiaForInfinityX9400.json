@@ -1,0 +1,45 @@
+{
+  "strategy_name": "NostalgiaForInfinityX9400",
+  "params": {
+    "roi": {
+      "0": 0.1,
+      "10": 0.05,
+      "30": 0.03,
+      "60": 0.01
+    },
+    "stoploss": {
+      "stoploss": -0.15
+    },
+    "trailing": {
+      "trailing_stop": false,
+      "trailing_stop_positive": 0.01,
+      "trailing_stop_positive_offset": 0.03,
+      "trailing_only_offset_is_reached": true
+    },
+    "max_open_trades": {
+      "max_open_trades": 6
+    },
+    "buy": {
+      "buy_condition_7_rsi_1h_max": 85,
+      "buy_condition_7_rsi_1h_min": 50,
+      "buy_condition_7_rsi_5m_max": 80,
+      "buy_condition_7_rsi_5m_min": 50,
+      "buy_condition_7_scalp_rsi_1h_max": 85,
+      "buy_condition_7_scalp_rsi_1h_min": 58,
+      "buy_condition_7_volume_15m_factor": 0.8,
+      "buy_condition_7_volume_5m_factor": 2.0
+    },
+    "sell": {
+      "short_condition_907_rsi_1h_max": 49,
+      "short_condition_907_rsi_1h_min": 17,
+      "short_condition_907_rsi_5m_max": 42,
+      "short_condition_907_rsi_5m_min": 27,
+      "short_condition_907_scalp_rsi_1h_max": 50,
+      "short_condition_907_scalp_rsi_1h_min": 17,
+      "short_condition_907_volume_15m_factor": 0.5,
+      "short_condition_907_volume_5m_factor": 1.3
+    }
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2025-12-09 06:23:19.938202+00:00"
+}
