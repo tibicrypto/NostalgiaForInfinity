@@ -1,0 +1,215 @@
+Strategy name: 9400
+Multi-Timeframe Scalping Strategy (Long Index 7 + Short Index 907)
+
+================================================================================
+OVERVIEW
+================================================================================
+This is a multi-timeframe scalping strategy that combines:
+- Long Entry: Condition Index 7 (Scalp Multi-Timeframe Strategy - Long)
+- Short Entry: Condition Index 907 (Scalp Multi-Timeframe Strategy - Short)
+
+The strategy identifies squeeze/consolidation patterns on 15m timeframe and 
+enters on breakouts confirmed by volume and momentum on 5m timeframe, with 
+overall trend confirmation from 1h timeframe.
+
+================================================================================
+STRATEGY LOGIC - LONG ENTRY (Index 7)
+================================================================================
+
+Step 1: H1 Uptrend Confirmation
+---------------------------------
+Confirms bullish trend on 1h timeframe using RSI indicators.
+
+Conditions:
+  • RSI_14_1h > buy_condition_7_rsi_1h_min (default: 55)
+  • scalp_rsi_1h > buy_condition_7_scalp_rsi_1h_min (default: 55)
+  • scalp_rsi_1h < buy_condition_7_scalp_rsi_1h_max (default: 80)  [Not overbought]
+
+Step 2: M15 Squeeze Detection
+-------------------------------
+Identifies consolidation/squeeze zones on 15m timeframe with low volatility.
+
+Conditions:
+  • scalp_bbw_15m <= scalp_bbw_min_15m  [BBW in lower 20% of recent range]
+  • volume < (scalp_vol_ma_15m * buy_condition_7_volume_15m_factor)  [default: 0.8]
+    [Low volume confirmation - uses 5m volume compared to 15m MA]
+
+Step 3: M5 Breakout Confirmation
+----------------------------------
+Confirms breakout on 5m timeframe with volume surge.
+
+Conditions:
+  • close > scalp_bb_upper_5m  [Price breaks above upper Bollinger Band]
+  • volume > (scalp_vol_ma_5m * buy_condition_7_volume_5m_factor)  [default: 1.7]
+    [Volume spike confirmation]
+
+Step 4: M5 Momentum Confirmation
+----------------------------------
+Validates momentum but ensures not overbought.
+
+Conditions:
+  • scalp_rsi_5m > buy_condition_7_rsi_5m_min (default: 55)
+  • scalp_rsi_5m < buy_condition_7_rsi_5m_max (default: 75)  [Not overbought]
+
+Protections:
+  • num_empty_288 <= allowed_empty_candles_288
+  • protections_long_global == True
+
+
+================================================================================
+STRATEGY LOGIC - SHORT ENTRY (Index 907)
+================================================================================
+
+Step 1: H1 Downtrend Confirmation
+-----------------------------------
+Confirms bearish trend on 1h timeframe using RSI indicators (inverted from long).
+
+Conditions:
+  • RSI_14_1h < short_condition_907_rsi_1h_max (default: 45)  [Bearish momentum]
+  • scalp_rsi_1h < short_condition_907_scalp_rsi_1h_max (default: 45)
+  • scalp_rsi_1h > short_condition_907_scalp_rsi_1h_min (default: 20)  [Not oversold]
+
+Step 2: M15 Squeeze Detection
+-------------------------------
+Same as long - identifies consolidation zones on 15m timeframe.
+
+Conditions:
+  • scalp_bbw_15m <= scalp_bbw_min_15m  [BBW in lower 20% of recent range]
+  • volume < (scalp_vol_ma_15m * short_condition_907_volume_15m_factor)  [default: 0.8]
+    [Low volume confirmation - uses 5m volume compared to 15m MA]
+
+Step 3: M5 Breakdown Confirmation
+-----------------------------------
+Confirms breakdown on 5m timeframe with volume surge (inverted from long).
+
+Conditions:
+  • close < scalp_bb_lower_5m  [Price breaks below lower Bollinger Band]
+  • volume > (scalp_vol_ma_5m * short_condition_907_volume_5m_factor)  [default: 1.7]
+    [Volume spike confirmation]
+
+Step 4: M5 Momentum Confirmation
+----------------------------------
+Validates bearish momentum but ensures not oversold (inverted from long).
+
+Conditions:
+  • scalp_rsi_5m < short_condition_907_rsi_5m_max (default: 45)
+  • scalp_rsi_5m > short_condition_907_rsi_5m_min (default: 25)  [Not oversold]
+
+Protections:
+  • num_empty_288 <= allowed_empty_candles_288
+  • protections_short_global == True
+  • global_protections_short_pump == True
+  • global_protections_short_dump == True
+
+
+================================================================================
+HYPEROPT PARAMETERS
+================================================================================
+
+Long Entry Parameters (Index 7):
+---------------------------------
+  buy_condition_7_rsi_1h_min = IntParameter(50, 60, default=55, space="buy", optimize=True)
+  buy_condition_7_rsi_1h_max = IntParameter(75, 85, default=80, space="buy", optimize=True)
+  buy_condition_7_scalp_rsi_1h_min = IntParameter(50, 60, default=55, space="buy", optimize=True)
+  buy_condition_7_scalp_rsi_1h_max = IntParameter(75, 85, default=80, space="buy", optimize=True)
+  buy_condition_7_volume_15m_factor = DecimalParameter(0.5, 1.0, default=0.8, decimals=1, space="buy", optimize=True)
+  buy_condition_7_volume_5m_factor = DecimalParameter(1.3, 2.5, default=1.7, decimals=1, space="buy", optimize=True)
+  buy_condition_7_rsi_5m_min = IntParameter(50, 60, default=55, space="buy", optimize=True)
+  buy_condition_7_rsi_5m_max = IntParameter(70, 80, default=75, space="buy", optimize=True)
+
+Short Entry Parameters (Index 907):
+------------------------------------
+  short_condition_907_rsi_1h_min = IntParameter(15, 25, default=20, space="sell", optimize=True)
+  short_condition_907_rsi_1h_max = IntParameter(40, 50, default=45, space="sell", optimize=True)
+  short_condition_907_scalp_rsi_1h_min = IntParameter(15, 25, default=20, space="sell", optimize=True)
+  short_condition_907_scalp_rsi_1h_max = IntParameter(40, 50, default=45, space="sell", optimize=True)
+  short_condition_907_volume_15m_factor = DecimalParameter(0.5, 1.0, default=0.8, decimals=1, space="sell", optimize=True)
+  short_condition_907_volume_5m_factor = DecimalParameter(1.3, 2.5, default=1.7, decimals=1, space="sell", optimize=True)
+  short_condition_907_rsi_5m_min = IntParameter(20, 30, default=25, space="sell", optimize=True)
+  short_condition_907_rsi_5m_max = IntParameter(40, 50, default=45, space="sell", optimize=True)
+
+
+================================================================================
+INDICATORS REQUIRED
+================================================================================
+
+1h Timeframe Indicators (informative_1h):
+------------------------------------------
+  • RSI_14 = pta.rsi(close, length=14)
+  • scalp_ema = pta.ema(close, length=100)
+  • scalp_rsi = pta.rsi(close, length=14)
+
+15m Timeframe Indicators (informative_15m):
+--------------------------------------------
+  • BB Bands: bbands = pta.bbands(close, length=20)
+    - scalp_bb_upper = BBU_20_2.0
+    - scalp_bb_lower = BBL_20_2.0
+    - scalp_bb_mid = BBM_20_2.0
+  • scalp_bbw = (scalp_bb_upper - scalp_bb_lower) / scalp_bb_mid
+  • scalp_bbw_min = scalp_bbw.rolling(window=100).quantile(0.20)
+  • scalp_vol_ma = pta.sma(volume, length=20)
+
+5m Timeframe Indicators (base):
+--------------------------------
+  • BB Bands: bbands = pta.bbands(close, length=20)
+    - scalp_bb_upper_5m = BBU_20_2.0
+    - scalp_bb_lower_5m = BBL_20_2.0
+  • scalp_rsi_5m = pta.rsi(close, length=14)
+  • scalp_vol_ma_5m = pta.sma(volume, length=20)
+  • scalp_atr_5m = pta.atr(high, low, close, length=14)
+
+
+================================================================================
+ENABLE/DISABLE IN CONFIG
+================================================================================
+
+To enable these strategies in long_entry_signal_params / short_entry_signal_params:
+
+  long_entry_signal_params = {
+    "long_entry_condition_7_enable": True,  # Scalp Multi-TF Strategy
+  }
+
+  short_entry_signal_params = {
+    "short_entry_condition_907_enable": True,  # Scalp Multi-TF Strategy
+  }
+
+
+================================================================================
+STRATEGY CHARACTERISTICS
+================================================================================
+
+Timeframe: 5m (base)
+Strategy Type: Scalping / Breakout
+Trend Following: Yes (with 1h trend filter)
+Counter-Trend: No
+
+Key Features:
+  • Multi-timeframe confirmation (1h trend, 15m squeeze, 5m breakout)
+  • Volume-based confirmation
+  • Bollinger Band squeeze detection
+  • RSI momentum filters
+  • Symmetrical logic for long and short entries
+  • Risk management with ATR-based stops available
+
+Best Used For:
+  • High volatility markets
+  • Pairs with clear trends
+  • Active trading during high volume sessions
+  • Futures trading (supports both spot and futures)
+
+
+================================================================================
+IMPLEMENTATION NOTES
+================================================================================
+
+1. This strategy requires accurate multi-timeframe data merging
+2. The 15m squeeze detection uses a 100-candle lookback for BBW percentile
+3. Volume comparisons use 5m volume against 15m volume MA
+4. All indicators use pandas_ta (pta) library
+5. Strategy includes global protection mechanisms
+6. ATR indicator (scalp_atr_5m) is available for stop loss calculations
+
+Original Implementation:
+  • Long Entry: NostalgiaForInfinityX7.py, line ~13678, Condition #7
+  • Short Entry: NostalgiaForInfinityX7.py, line ~21248, Condition #907
+  • Author: iterativ (NostalgiaForInfinity)

@@ -4,7 +4,7 @@
 source .venv/bin/activate
 
 # Configuration
-STRATEGY="Test9201"
+STRATEGY="NostalgiaForInfinityX9400"
 CONFIG_PAIRLIST="configs/pairlist-hyperopt-static-binance-futures-usdt.json"
 TIMERANGE="20250101-20251101"
 TIMEFRAMES="5m 1h 15m 4h 1d"
@@ -47,7 +47,7 @@ run_hyperopt() {
     --config "$CONFIG_PAIRLIST" \
     --timerange "$TIMERANGE" \
     --epochs 500 \
-    --spaces opt_9201 opt_9201_long stoploss\
+    --spaces buy sell\
     --random-state 42 \
     -j 2
   echo ""

@@ -198,9 +198,9 @@ class Test9300(IStrategy):
     informative_15m = self.informative_15m_indicators(metadata, informative_15m)
     df = merge_informative_pair(df, informative_15m, self.timeframe, "15m", ffill=True)
     
-    # Drop duplicate columns
-    drop_columns = [f"{s}_1h" for s in ["date", "open", "high", "low", "close", "volume"]]
-    drop_columns += [f"{s}_15m" for s in ["date", "open", "high", "low", "close", "volume"]]
+    # Drop duplicate columns but keep volume_15m (needed for entry logic)
+    drop_columns = [f"{s}_1h" for s in ["date", "open", "high", "low", "close"]]
+    drop_columns += [f"{s}_15m" for s in ["date", "open", "high", "low", "close"]]
     df.drop(columns=df.columns.intersection(drop_columns), inplace=True)
     
     # Base timeframe (5m)
@@ -219,12 +219,12 @@ class Test9300(IStrategy):
       long_conditions = []
       
       # STEP 1: H1 UPTREND
-      long_conditions.append(df["close"] > df["ema_1h_long"])
-      long_conditions.append(df["rsi_1h_long"] > self.h1_rsi_level_long.value)
+      long_conditions.append(df["close"] > df["ema_1h_long_1h"])
+      long_conditions.append(df["rsi_1h_long_1h"] > self.h1_rsi_level_long.value)
       
       # STEP 2: 15M SQUEEZE
-      long_conditions.append(df["bbw_15m_long"] <= df["bbw_min_hist_15m_long"])  # Squeeze condition
-      long_conditions.append(df["volume_15m"] < df["volume_ma_15m_long"])  # Low volume
+      long_conditions.append(df["bbw_15m_long_15m"] <= df["bbw_min_hist_15m_long_15m"])  # Squeeze condition
+      long_conditions.append(df["volume_15m"] < df["volume_ma_15m_long_15m"])  # Low volume
       
       # STEP 3: 5M BREAKOUT
       # Breakout: Previous close was below BB upper, current close is above
@@ -247,12 +247,12 @@ class Test9300(IStrategy):
       short_conditions = []
       
       # STEP 1: H1 DOWNTREND
-      short_conditions.append(df["close"] < df["ema_1h_short"])
-      short_conditions.append(df["rsi_1h_short"] < self.h1_rsi_level_short.value)
+      short_conditions.append(df["close"] < df["ema_1h_short_1h"])
+      short_conditions.append(df["rsi_1h_short_1h"] < self.h1_rsi_level_short.value)
       
       # STEP 2: 15M SQUEEZE
-      short_conditions.append(df["bbw_15m_short"] <= df["bbw_min_hist_15m_short"])  # Squeeze condition
-      short_conditions.append(df["volume_15m"] < df["volume_ma_15m_short"])  # Low volume
+      short_conditions.append(df["bbw_15m_short_15m"] <= df["bbw_min_hist_15m_short_15m"])  # Squeeze condition
+      short_conditions.append(df["volume_15m"] < df["volume_ma_15m_short_15m"])  # Low volume
       
       # STEP 3: 5M BREAKDOWN
       # Breakdown: Previous close was above BB lower, current close is below
@@ -380,7 +380,7 @@ class Test9300(IStrategy):
         return "exit_long_momentum_loss"
       
       # Exit on H1 trend reversal
-      if last_candle.get("close", 0) < last_candle.get("ema_1h_long", 0):
+      if last_candle.get("close", 0) < last_candle.get("ema_1h_long_1h", 0):
         if current_profit is not None and current_profit < 0:
           return "exit_long_h1_reversal"
     
@@ -395,7 +395,7 @@ class Test9300(IStrategy):
         return "exit_short_momentum_loss"
       
       # Exit on H1 trend reversal
-      if last_candle.get("close", 0) > last_candle.get("ema_1h_short", 0):
+      if last_candle.get("close", 0) > last_candle.get("ema_1h_short_1h", 0):
         if current_profit is not None and current_profit < 0:
           return "exit_short_h1_reversal"
     

@@ -1,0 +1,85 @@
+{
+  "strategy_name": "Test9201",
+  "params": {
+    "roi": {
+      "0": 0.05,
+      "30": 0.02,
+      "60": 0.01,
+      "1440": 0.005
+    },
+    "trailing": {
+      "trailing_stop": true,
+      "trailing_stop_positive": 0.015,
+      "trailing_stop_positive_offset": 0.035,
+      "trailing_only_offset_is_reached": true
+    },
+    "max_open_trades": {
+      "max_open_trades": 6
+    },
+    "sell": {
+      "bearrider_phase2_enable": false
+    },
+    "opt_9101_long": {
+      "long_condition_9101_1h_confirmation_enable": 0,
+      "long_condition_9101_adx_enable": 0,
+      "long_condition_9101_adx_max": 80,
+      "long_condition_9101_adx_min": 20,
+      "long_condition_9101_adx_slope_enable": 0,
+      "long_condition_9101_atr_min": 1.0,
+      "long_condition_9101_bb_width_min": 2.0,
+      "long_condition_9101_cmo_min": 0,
+      "long_condition_9101_directional_enable": 0,
+      "long_condition_9101_ema_ribbon_enable": 0,
+      "long_condition_9101_enable": true,
+      "long_condition_9101_mfi_min": 40,
+      "long_condition_9101_obv_enable": 0,
+      "long_condition_9101_plus_di_min": 20,
+      "long_condition_9101_roc_min": 0,
+      "long_condition_9101_rsi_1h_max": 60,
+      "long_condition_9101_rsi_1h_min": 15,
+      "long_condition_9101_sar_enable": 0,
+      "long_condition_9101_stochrsi_max": 70,
+      "long_condition_9101_supertrend_enable": 0,
+      "long_condition_9101_volatility_enable": 0,
+      "long_condition_9101_volume_factor": 0.5,
+      "long_condition_9101_volume_relative_min": 0.7,
+      "long_condition_9101_vwap_enable": 0,
+      "long_condition_9101_willr_max": -70,
+      "long_condition_9101_willr_min": -20
+    },
+    "stoploss": {
+      "stoploss": -0.054
+    },
+    "opt_9201": {
+      "bearrider_regime_volatility_threshold": 1.4,
+      "short_condition_9201_1h_confirmation_enable": 1,
+      "short_condition_9201_adx_enable": 1,
+      "short_condition_9201_adx_max": 82,
+      "short_condition_9201_adx_min": 33,
+      "short_condition_9201_adx_slope_enable": 1,
+      "short_condition_9201_atr_min": 2.3,
+      "short_condition_9201_bb_width_min": 3.1,
+      "short_condition_9201_cmo_max": -13,
+      "short_condition_9201_directional_enable": 1,
+      "short_condition_9201_ema_ribbon_enable": 0,
+      "short_condition_9201_enable": true,
+      "short_condition_9201_mfi_max": 64,
+      "short_condition_9201_minus_di_min": 17,
+      "short_condition_9201_obv_enable": 0,
+      "short_condition_9201_roc_max": 1,
+      "short_condition_9201_rsi_1h_max": 51,
+      "short_condition_9201_rsi_1h_min": 23,
+      "short_condition_9201_sar_enable": 1,
+      "short_condition_9201_stochrsi_min": 49,
+      "short_condition_9201_supertrend_enable": 0,
+      "short_condition_9201_volatility_enable": 1,
+      "short_condition_9201_volume_factor": 0.7,
+      "short_condition_9201_volume_relative_min": 1.0,
+      "short_condition_9201_vwap_enable": 0,
+      "short_condition_9201_willr_max": -92,
+      "short_condition_9201_willr_min": -30
+    }
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2025-12-08 11:23:19.131066+00:00"
+}
