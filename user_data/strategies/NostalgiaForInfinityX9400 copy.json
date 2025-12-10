@@ -17,32 +17,32 @@
       "max_open_trades": 6
     },
     "buy": {
-      "buy_condition_7_rsi_1h_max": 81,
-      "buy_condition_7_rsi_1h_min": 60,
-      "buy_condition_7_rsi_5m_max": 70,
-      "buy_condition_7_rsi_5m_min": 60,
-      "buy_condition_7_scalp_rsi_1h_max": 85,
-      "buy_condition_7_scalp_rsi_1h_min": 55,
+      "buy_condition_7_rsi_1h_max": 78,
+      "buy_condition_7_rsi_1h_min": 59,
+      "buy_condition_7_rsi_5m_max": 74,
+      "buy_condition_7_rsi_5m_min": 58,
+      "buy_condition_7_scalp_rsi_1h_max": 77,
+      "buy_condition_7_scalp_rsi_1h_min": 52,
       "buy_condition_7_volume_15m_factor": 0.5,
-      "buy_condition_7_volume_5m_factor": 1.7
+      "buy_condition_7_volume_5m_factor": 1.8
     },
     "sell": {
       "short_condition_907_rsi_1h_max": 40,
-      "short_condition_907_rsi_1h_min": 22,
+      "short_condition_907_rsi_1h_min": 16,
       "short_condition_907_rsi_5m_max": 41,
-      "short_condition_907_rsi_5m_min": 20,
-      "short_condition_907_scalp_rsi_1h_max": 42,
-      "short_condition_907_scalp_rsi_1h_min": 22,
+      "short_condition_907_rsi_5m_min": 29,
+      "short_condition_907_scalp_rsi_1h_max": 43,
+      "short_condition_907_scalp_rsi_1h_min": 18,
       "short_condition_907_volume_15m_factor": 1.0,
-      "short_condition_907_volume_5m_factor": 2.3
+      "short_condition_907_volume_5m_factor": 1.6
     },
     "stoploss": {
-      "stoploss": -0.132
+      "stoploss": -0.201
     },
     "leverage": {
       "leverage_hyperopt": 3
     }
   },
   "ft_stratparam_v": 1,
-  "export_time": "2025-12-10 02:08:19.342709+00:00"
+  "export_time": "2025-12-09 13:03:36.515257+00:00"
 }

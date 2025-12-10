@@ -55,7 +55,7 @@ class NostalgiaForInfinityX9400(IStrategy):
   stoploss = -0.15
   
   # Hyperopt parameters for stoploss
-  stoploss_hyperopt = DecimalParameter(-0.30, -0.05, default=-0.15, decimals=3, space="stoploss", optimize=True, load=True)
+  #stoploss_hyperopt = DecimalParameter(-0.30, -0.05, default=-0.15, decimals=3, space="stoploss", optimize=True, load=True)
 
   # Trailing stoploss (not used)
   trailing_stop = False
@@ -119,7 +119,7 @@ class NostalgiaForInfinityX9400(IStrategy):
   short_condition_907_rsi_5m_max = IntParameter(40, 50, default=45, space="sell", optimize=True)
 
   # Hyperopt parameters for leverage
-  leverage_hyperopt = DecimalParameter(1.0, 10.0, default=1.0, decimals=1, space="leverage", optimize=True, load=True)
+  leverage_hyperopt = IntParameter(1, 10, default=1, space="leverage", optimize=True, load=True)
 
   # Long/Short mode tags
   long_scalp_mode_tags = ["9400_long"]
