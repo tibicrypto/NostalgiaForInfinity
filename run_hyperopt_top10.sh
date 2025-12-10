@@ -267,41 +267,36 @@ compare_backtest_results() {
     if [ -f "$ZIP_FILE" ]; then
       unzip -q -o "$ZIP_FILE" -d "$BACKTEST_DIR/temp_$i" 2>/dev/null
       
-      # Find the strategy JSON file and extract metrics
-      STRATEGY_FILE=$(find "$BACKTEST_DIR/temp_$i" -name "*strategy*.json" -o -name "*.json" | head -1)
+      # Find the main backtest result JSON file (not config or strategy params)
+      RESULT_FILE=$(find "$BACKTEST_DIR/temp_$i" -name "backtest-result-*.json" ! -name "*_config.json" ! -name "*_${STRATEGY}.json" | head -1)
       
-      if [ -f "$STRATEGY_FILE" ] && command -v jq &> /dev/null; then
-        # Get first strategy key dynamically
-        STRAT_KEY=$(jq -r 'keys[0]' "$STRATEGY_FILE" 2>/dev/null)
+      if [ -f "$RESULT_FILE" ] && command -v jq &> /dev/null; then
+        # Extract metrics from strategy_comparison array (first element)
+        TOTAL_TRADES=$(jq -r '.strategy_comparison[0].trades // "N/A"' "$RESULT_FILE" 2>/dev/null)
+        PROFIT_TOTAL=$(jq -r '.strategy_comparison[0].profit_total_pct // "N/A"' "$RESULT_FILE" 2>/dev/null)
+        PROFIT_MEAN=$(jq -r '.strategy_comparison[0].profit_mean_pct // "N/A"' "$RESULT_FILE" 2>/dev/null)
+        PROFIT_TOTAL_ABS=$(jq -r '.strategy_comparison[0].profit_total_abs // "N/A"' "$RESULT_FILE" 2>/dev/null)
+        WIN_RATE=$(jq -r '.strategy_comparison[0].wins // 0' "$RESULT_FILE" 2>/dev/null)
+        LOSS_RATE=$(jq -r '.strategy_comparison[0].losses // 0' "$RESULT_FILE" 2>/dev/null)
+        MAX_DRAWDOWN=$(jq -r '.strategy_comparison[0].max_drawdown_account // "N/A"' "$RESULT_FILE" 2>/dev/null)
+        WINRATE_PCT=$(jq -r '.strategy_comparison[0].winrate // "N/A"' "$RESULT_FILE" 2>/dev/null)
         
-        if [ "$STRAT_KEY" != "null" ] && [ -n "$STRAT_KEY" ]; then
-          TOTAL_TRADES=$(jq -r ".\"$STRAT_KEY\".results_per_pair[-1].trades // \"N/A\"" "$STRATEGY_FILE" 2>/dev/null)
-          PROFIT_TOTAL=$(jq -r ".\"$STRAT_KEY\".results_per_pair[-1].profit_total // \"N/A\"" "$STRATEGY_FILE" 2>/dev/null)
-          PROFIT_MEAN=$(jq -r ".\"$STRAT_KEY\".results_per_pair[-1].profit_mean // \"N/A\"" "$STRATEGY_FILE" 2>/dev/null)
-          PROFIT_TOTAL_ABS=$(jq -r ".\"$STRAT_KEY\".results_per_pair[-1].profit_total_abs // \"N/A\"" "$STRATEGY_FILE" 2>/dev/null)
-          WIN_RATE=$(jq -r ".\"$STRAT_KEY\".results_per_pair[-1].wins // 0" "$STRATEGY_FILE" 2>/dev/null)
-          LOSS_RATE=$(jq -r ".\"$STRAT_KEY\".results_per_pair[-1].losses // 0" "$STRATEGY_FILE" 2>/dev/null)
-          MAX_DRAWDOWN=$(jq -r ".\"$STRAT_KEY\".max_drawdown_account // \"N/A\"" "$STRATEGY_FILE" 2>/dev/null)
-          
-          # Calculate win percentage
-          if [ "$TOTAL_TRADES" != "N/A" ] && [ "$TOTAL_TRADES" != "null" ] && [ "$TOTAL_TRADES" -gt 0 ]; then
-            WIN_PCT=$(echo "scale=1; $WIN_RATE * 100 / $TOTAL_TRADES" | bc 2>/dev/null || echo "N/A")
-          else
-            WIN_PCT="N/A"
-          fi
-          
-          echo "  📊 Total Trades:      $TOTAL_TRADES"
-          echo "  💰 Profit Total:      ${PROFIT_TOTAL}%"
-          echo "  📈 Profit Mean:       ${PROFIT_MEAN}%"
-          echo "  💵 Profit Total Abs:  $PROFIT_TOTAL_ABS USDT"
-          echo "  ✅ Wins / ❌ Losses:  $WIN_RATE / $LOSS_RATE"
-          echo "  🎯 Win Rate:          ${WIN_PCT}%"
-          echo "  📉 Max Drawdown:      ${MAX_DRAWDOWN}%"
+        # Format winrate percentage
+        if [ "$WINRATE_PCT" != "N/A" ] && [ "$WINRATE_PCT" != "null" ]; then
+          WIN_PCT=$(echo "scale=1; $WINRATE_PCT * 100" | bc 2>/dev/null || echo "$WINRATE_PCT")
         else
-          echo "  ℹ️  Unable to parse strategy data"
+          WIN_PCT="N/A"
         fi
+        
+        echo "  📊 Total Trades:      $TOTAL_TRADES"
+        echo "  💰 Profit Total:      ${PROFIT_TOTAL}%"
+        echo "  📈 Profit Mean:       ${PROFIT_MEAN}%"
+        echo "  💵 Profit Total Abs:  $PROFIT_TOTAL_ABS USDT"
+        echo "  ✅ Wins / ❌ Losses:  $WIN_RATE / $LOSS_RATE"
+        echo "  🎯 Win Rate:          ${WIN_PCT}%"
+        echo "  📉 Max Drawdown:      ${MAX_DRAWDOWN}%"
       else
-        echo "  ℹ️  Run 'freqtrade backtesting-show' for detailed stats"
+        echo "  ℹ️  Unable to parse result file"
       fi
       
       # Cleanup temp directory
