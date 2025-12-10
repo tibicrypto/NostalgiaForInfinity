@@ -122,18 +122,26 @@ class NostalgiaForInfinityX9400(IStrategy):
   leverage_hyperopt = IntParameter(1, 10, default=1, space="leverage", optimize=True, load=True)
 
   # Hyperopt parameters for exit conditions (Long)
-  exit_long_profit_target_1 = DecimalParameter(0.01, 0.03, default=0.015, decimals=3, space="buy", optimize=True)
-  exit_long_profit_target_2 = DecimalParameter(0.03, 0.06, default=0.04, decimals=3, space="buy", optimize=True)
-  exit_long_profit_target_3 = DecimalParameter(0.06, 0.12, default=0.08, decimals=3, space="buy", optimize=True)
+  exit_long_profit_target_1 = DecimalParameter(0.01, 0.04, default=0.02, decimals=3, space="buy", optimize=True)
+  exit_long_profit_target_2 = DecimalParameter(0.04, 0.12, default=0.06, decimals=3, space="buy", optimize=True)
   exit_long_rsi_overbought = IntParameter(70, 85, default=78, space="buy", optimize=True)
   exit_long_rsi_under = IntParameter(30, 50, default=40, space="buy", optimize=True)
   
+  # Hyperopt parameters for exit 3 (Long trend reversal)
+  exit_long_rsi_1h_under = IntParameter(40, 50, default=45, space="buy", optimize=True)
+  exit_long_rsi_5m_under = IntParameter(30, 40, default=35, space="buy", optimize=True)
+  exit_long_rsi_14_1h_under = IntParameter(45, 55, default=50, space="buy", optimize=True)
+  
   # Hyperopt parameters for exit conditions (Short)
-  exit_short_profit_target_1 = DecimalParameter(0.01, 0.03, default=0.015, decimals=3, space="sell", optimize=True)
-  exit_short_profit_target_2 = DecimalParameter(0.03, 0.06, default=0.04, decimals=3, space="sell", optimize=True)
-  exit_short_profit_target_3 = DecimalParameter(0.06, 0.12, default=0.08, decimals=3, space="sell", optimize=True)
+  exit_short_profit_target_1 = DecimalParameter(0.01, 0.04, default=0.02, decimals=3, space="sell", optimize=True)
+  exit_short_profit_target_2 = DecimalParameter(0.04, 0.12, default=0.06, decimals=3, space="sell", optimize=True)
   exit_short_rsi_oversold = IntParameter(15, 30, default=22, space="sell", optimize=True)
   exit_short_rsi_over = IntParameter(50, 70, default=60, space="sell", optimize=True)
+  
+  # Hyperopt parameters for exit 3 (Short trend reversal)
+  exit_short_rsi_1h_over = IntParameter(50, 60, default=55, space="sell", optimize=True)
+  exit_short_rsi_5m_over = IntParameter(60, 70, default=65, space="sell", optimize=True)
+  exit_short_rsi_14_1h_over = IntParameter(45, 55, default=50, space="sell", optimize=True)
 
   # Long/Short mode tags
   long_scalp_mode_tags = ["9400_long"]
@@ -433,9 +441,9 @@ class NostalgiaForInfinityX9400(IStrategy):
 
     # Exit 3: 1h trend reversal
     long_exit_3 = (
-      (df["scalp_rsi_1h"] < 45) &
-      (df["scalp_rsi_5m"] < 35) &
-      (df["RSI_14_1h"] < 50)
+      (df["scalp_rsi_1h"] < self.exit_long_rsi_1h_under.value) & 
+      (df["scalp_rsi_5m"] < self.exit_long_rsi_5m_under.value) & 
+      (df["RSI_14_1h"] < self.exit_long_rsi_14_1h_under.value)
     )
     df.loc[long_exit_3, "exit_long"] = 1
     df.loc[long_exit_3, "exit_tag"] += "long_trend_reversal "
@@ -461,9 +469,9 @@ class NostalgiaForInfinityX9400(IStrategy):
 
     # Exit 3: 1h trend reversal
     short_exit_3 = (
-      (df["scalp_rsi_1h"] > 55) &
-      (df["scalp_rsi_5m"] > 65) &
-      (df["RSI_14_1h"] > 50)
+      (df["scalp_rsi_1h"] > self.exit_short_rsi_1h_over.value) &
+      (df["scalp_rsi_5m"] > self.exit_short_rsi_5m_over.value) &
+      (df["RSI_14_1h"] > self.exit_short_rsi_14_1h_over.value)
     )
     df.loc[short_exit_3, "exit_short"] = 1
     df.loc[short_exit_3, "exit_tag"] += "short_trend_reversal "
@@ -519,22 +527,15 @@ class NostalgiaForInfinityX9400(IStrategy):
     **kwargs,
   ) -> Optional[str]:
     """
-    Custom exit with tiered profit targets
+    Custom exit with 2 tiered profit targets
     """
     # Get trade direction
     is_long = trade.is_short == False
     
     if is_long:
       # Long position profit targets
-      if current_profit >= self.exit_long_profit_target_3.value:
-        return "long_profit_target_3"
-      elif current_profit >= self.exit_long_profit_target_2.value:
-        # At target 2, check if momentum is weakening
-        dataframe, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
-        if len(dataframe) > 0:
-          last_candle = dataframe.iloc[-1].squeeze()
-          if last_candle["scalp_rsi_5m"] > self.exit_long_rsi_overbought.value:
-            return "long_profit_target_2_rsi_weak"
+      if current_profit >= self.exit_long_profit_target_2.value:
+        return "long_profit_target_2"
       elif current_profit >= self.exit_long_profit_target_1.value:
         # At target 1, check for early reversal signs
         dataframe, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
@@ -545,15 +546,8 @@ class NostalgiaForInfinityX9400(IStrategy):
               return "long_profit_target_1_reversal"
     else:
       # Short position profit targets
-      if current_profit >= self.exit_short_profit_target_3.value:
-        return "short_profit_target_3"
-      elif current_profit >= self.exit_short_profit_target_2.value:
-        # At target 2, check if momentum is weakening
-        dataframe, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
-        if len(dataframe) > 0:
-          last_candle = dataframe.iloc[-1].squeeze()
-          if last_candle["scalp_rsi_5m"] < self.exit_short_rsi_oversold.value:
-            return "short_profit_target_2_rsi_weak"
+      if current_profit >= self.exit_short_profit_target_2.value:
+        return "short_profit_target_2"
       elif current_profit >= self.exit_short_profit_target_1.value:
         # At target 1, check for early reversal signs
         dataframe, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
