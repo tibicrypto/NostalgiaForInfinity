@@ -6,7 +6,7 @@ source .venv/bin/activate
 # Configuration
 STRATEGY="NostalgiaForInfinityX9400"
 CONFIG_PAIRLIST="configs/pairlist-hyperopt-static-binance-futures-usdt.json"
-TIMERANGE="20250101-20251201"
+TIMERANGE="20250101-20251213"
 TIMEFRAMES="5m 1h 15m 4h 1d"
 
 # Menu for user selection
@@ -16,7 +16,7 @@ echo "========================================="
 echo ""
 echo "Select an option:"
 echo "  1) Download data only"
-echo "  2) Run hyperopt (500 epochs)"
+echo "  2) Run hyperopt (800 epochs)"
 echo "  3) Run backtest"
 echo "  4) Download data + hyperopt"
 echo "  5) Download data + backtest"
@@ -30,28 +30,36 @@ read -p "Enter your choice [1-9]: " choice
 # Function to download data
 download_data() {
   echo ""
-  echo "Downloading data for top 10 coins..."
+  echo "Downloading data from 20250101..."
+  
+  # Calculate end date (today)
+  END_DATE=$(date +%Y%m%d)
+  DOWNLOAD_TIMERANGE="20250101-${END_DATE}"
+  
+  echo "Using timerange: $DOWNLOAD_TIMERANGE"
+  
   freqtrade download-data \
     --exchange binance \
     --trading-mode futures \
     --config "$CONFIG_PAIRLIST" \
     --timeframes $TIMEFRAMES \
-    --timerange "$TIMERANGE" \
-    --prepend
+    --timerange "$DOWNLOAD_TIMERANGE"
   echo "Data download completed!"
 }
 
 # Function to run hyperopt
 run_hyperopt() {
   echo ""
-  echo "Starting hyperopt with 200 epochs..."
+  echo "Starting hyperopt with 800 epochs..."
+  echo "Using timerange: $TIMERANGE"
+  
   freqtrade hyperopt \
     --hyperopt-loss SharpeHyperOptLoss \
     --strategy "$STRATEGY" \
     --config "$CONFIG_PAIRLIST" \
     --timerange "$TIMERANGE" \
-    --epochs 500 \
-    --spaces buy sell stoploss leverage\
+    --epochs 800 \
+    --spaces roi buy sell stoploss leverage\
     --random-state 42 \
     -j 2
   echo ""
@@ -62,6 +70,8 @@ run_hyperopt() {
 run_backtest() {
   echo ""
   echo "Starting backtest..."
+  echo "Using timerange: $TIMERANGE"
+  
   freqtrade backtesting \
     --strategy "$STRATEGY" \
     --config "$CONFIG_PAIRLIST" \

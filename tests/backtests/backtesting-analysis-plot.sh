@@ -66,7 +66,7 @@ fi
 # Strategy Config
 STRATEGY_NAME_CONFIG=""
 if [[ -z ${STRATEGY_NAME} ]]; then
-  STRATEGY_NAME_CONFIG="NostalgiaForInfinityX6"
+  STRATEGY_NAME_CONFIG="NostalgiaForInfinityX7"
 else
   STRATEGY_NAME_CONFIG=${STRATEGY_NAME}
 fi

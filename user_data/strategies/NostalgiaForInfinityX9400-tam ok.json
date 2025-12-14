@@ -1,0 +1,48 @@
+{
+  "strategy_name": "NostalgiaForInfinityX9400",
+  "params": {
+    "roi": {
+      "0": 0.1,
+      "10": 0.05,
+      "30": 0.08,
+      "60": 0.06
+    },
+    "trailing": {
+      "trailing_stop": false,
+      "trailing_stop_positive": 0.01,
+      "trailing_stop_positive_offset": 0.03,
+      "trailing_only_offset_is_reached": true
+    },
+    "max_open_trades": {
+      "max_open_trades": 6
+    },
+    "buy": {
+      "buy_condition_7_rsi_1h_max": 80,
+      "buy_condition_7_rsi_1h_min": 56,
+      "buy_condition_7_rsi_5m_max": 71,
+      "buy_condition_7_rsi_5m_min": 55,
+      "buy_condition_7_scalp_rsi_1h_max": 79,
+      "buy_condition_7_scalp_rsi_1h_min": 56,
+      "buy_condition_7_volume_15m_factor": 0.7,
+      "buy_condition_7_volume_5m_factor": 2.4
+    },
+    "sell": {
+      "short_condition_907_rsi_1h_max": 49,
+      "short_condition_907_rsi_1h_min": 22,
+      "short_condition_907_rsi_5m_max": 41,
+      "short_condition_907_rsi_5m_min": 25,
+      "short_condition_907_scalp_rsi_1h_max": 48,
+      "short_condition_907_scalp_rsi_1h_min": 23,
+      "short_condition_907_volume_15m_factor": 0.9,
+      "short_condition_907_volume_5m_factor": 1.7
+    },
+    "stoploss": {
+      "stoploss": -0.226
+    },
+    "leverage": {
+      "leverage_hyperopt": 1
+    }
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2025-12-11 19:57:55.649140+00:00"
+}
