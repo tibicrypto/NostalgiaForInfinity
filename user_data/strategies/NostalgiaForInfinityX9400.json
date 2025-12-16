@@ -8,41 +8,41 @@
       "trailing_only_offset_is_reached": true
     },
     "max_open_trades": {
-      "max_open_trades": Infinity
+      "max_open_trades": 6
     },
     "buy": {
-      "buy_condition_7_rsi_1h_max": 85,
+      "buy_condition_7_rsi_1h_max": 81,
       "buy_condition_7_rsi_1h_min": 58,
-      "buy_condition_7_rsi_5m_max": 72,
-      "buy_condition_7_rsi_5m_min": 52,
-      "buy_condition_7_scalp_rsi_1h_max": 79,
-      "buy_condition_7_scalp_rsi_1h_min": 59,
+      "buy_condition_7_rsi_5m_max": 80,
+      "buy_condition_7_rsi_5m_min": 56,
+      "buy_condition_7_scalp_rsi_1h_max": 82,
+      "buy_condition_7_scalp_rsi_1h_min": 58,
       "buy_condition_7_volume_15m_factor": 0.5,
-      "buy_condition_7_volume_5m_factor": 2.1
+      "buy_condition_7_volume_5m_factor": 1.6
     },
     "sell": {
-      "short_condition_907_rsi_1h_max": 46,
-      "short_condition_907_rsi_1h_min": 21,
-      "short_condition_907_rsi_5m_max": 50,
-      "short_condition_907_rsi_5m_min": 20,
-      "short_condition_907_scalp_rsi_1h_max": 43,
-      "short_condition_907_scalp_rsi_1h_min": 18,
+      "short_condition_907_rsi_1h_max": 48,
+      "short_condition_907_rsi_1h_min": 20,
+      "short_condition_907_rsi_5m_max": 44,
+      "short_condition_907_rsi_5m_min": 29,
+      "short_condition_907_scalp_rsi_1h_max": 50,
+      "short_condition_907_scalp_rsi_1h_min": 20,
       "short_condition_907_volume_15m_factor": 0.8,
-      "short_condition_907_volume_5m_factor": 2.4
+      "short_condition_907_volume_5m_factor": 1.7
     },
     "roi": {
-      "0": 0.1,
-      "28": 0.068,
-      "45": 0.01,
-      "60": 0
+      "0": 0.077,
+      "21": 0.021,
+      "59": 0.011,
+      "115": 0
     },
     "stoploss": {
-      "stoploss": -0.335
+      "stoploss": -0.201
     },
     "leverage": {
       "leverage_hyperopt": 1
     }
   },
   "ft_stratparam_v": 1,
-  "export_time": "2025-12-13 20:24:18.822628+00:00"
+  "export_time": "2025-12-14 17:02:21.200998+00:00"
 }

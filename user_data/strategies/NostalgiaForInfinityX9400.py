@@ -121,6 +121,14 @@ class NostalgiaForInfinityX9400(IStrategy):
   # Hyperopt parameters for leverage
   leverage_hyperopt = IntParameter(1, 10, default=2, space="leverage", optimize=True, load=True)
 
+  # Wick Rejection Filter Parameters (LONG)
+  long_wick_rejection_enable = True
+  long_wick_rejection_ratio = DecimalParameter(0.3, 0.7, default=0.5, decimals=2, space="buy", optimize=True)
+  
+  # Wick Rejection Filter Parameters (SHORT)
+  short_wick_rejection_enable = True
+  short_wick_rejection_ratio = DecimalParameter(0.3, 0.7, default=0.5, decimals=2, space="sell", optimize=True)
+
   # Long/Short mode tags
   long_scalp_mode_tags = ["9400_long"]
   short_scalp_mode_tags = ["9400_short"]
@@ -248,6 +256,22 @@ class NostalgiaForInfinityX9400(IStrategy):
     # ATR for stop loss/take profit calculation
     df["scalp_atr_5m"] = pta.atr(df["high"], df["low"], df["close"], length=14)
 
+    # Wick Rejection Indicators
+    # Calculate upper and lower wick sizes
+    df["upper_wick"] = df["high"] - df[["open", "close"]].max(axis=1)
+    df["lower_wick"] = df[["open", "close"]].min(axis=1) - df["low"]
+    df["body_size"] = abs(df["close"] - df["open"])
+    df["candle_range"] = df["high"] - df["low"]
+    
+    # Upper wick ratio (for long rejection detection)
+    df["upper_wick_ratio"] = df["upper_wick"] / df["candle_range"]
+    # Lower wick ratio (for short rejection detection)
+    df["lower_wick_ratio"] = df["lower_wick"] / df["candle_range"]
+    
+    # Fill any NaN or inf values with 0
+    df["upper_wick_ratio"] = df["upper_wick_ratio"].replace([np.inf, -np.inf], 0).fillna(0)
+    df["lower_wick_ratio"] = df["lower_wick_ratio"].replace([np.inf, -np.inf], 0).fillna(0)
+
     # Simple global protections
     df["protections_long_global"] = True
     df["protections_short_global"] = True
@@ -355,6 +379,11 @@ class NostalgiaForInfinityX9400(IStrategy):
       # Step 4: M5 Momentum Confirmation
       long_entry_logic.append(df["scalp_rsi_5m"] > self.buy_condition_7_rsi_5m_min.value)
       long_entry_logic.append(df["scalp_rsi_5m"] < self.buy_condition_7_rsi_5m_max.value)
+      
+      # Wick Rejection Filter (LONG)
+      if self.long_wick_rejection_enable:
+        # Reject if upper wick is too large (indicates rejection at higher prices)
+        long_entry_logic.append(df["upper_wick_ratio"] < self.long_wick_rejection_ratio.value)
 
       if long_entry_logic:
         df.loc[reduce(lambda x, y: x & y, long_entry_logic), "enter_tag"] += "9400_long "
@@ -387,6 +416,11 @@ class NostalgiaForInfinityX9400(IStrategy):
       # Step 4: M5 Momentum Confirmation
       short_entry_logic.append(df["scalp_rsi_5m"] < self.short_condition_907_rsi_5m_max.value)
       short_entry_logic.append(df["scalp_rsi_5m"] > self.short_condition_907_rsi_5m_min.value)
+      
+      # Wick Rejection Filter (SHORT)
+      if self.short_wick_rejection_enable:
+        # Reject if lower wick is too large (indicates rejection at lower prices)
+        short_entry_logic.append(df["lower_wick_ratio"] < self.short_wick_rejection_ratio.value)
 
       if short_entry_logic:
         df.loc[reduce(lambda x, y: x & y, short_entry_logic), "enter_tag"] += "9400_short "
