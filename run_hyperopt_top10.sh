@@ -5,7 +5,7 @@ source .venv/bin/activate
 
 # Configuration
 STRATEGY="NostalgiaForInfinityX7"
-CONFIG_PAIRLIST="user_data/config.json"
+CONFIG_PAIRLIST="configs/pairlist-hyperopt-static-binance-futures-usdt.json"
 TIMERANGE="20250101-20251213"
 TIMEFRAMES="5m 1h 15m 4h 1d"
 
