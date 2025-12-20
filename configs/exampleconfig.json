@@ -3,11 +3,11 @@
   // Please use at own risk
   // For full documentation on Freqtrade configuration files please visit https://www.freqtrade.io/en/stable/configuration/
   "dry_run": true,
-  "dry_run_wallet": 10000,
+  "dry_run_wallet": 1000,
   "grinding_enable": true,
   "max_open_trades": 6,
   "stake_currency": "USDT",
-  "stake_amount": "unlimited",
+  "stake_amount": 100,
   "tradable_balance_ratio": 0.99,
   "fiat_display_currency": "USD",
   "force_entry_enable": true,
