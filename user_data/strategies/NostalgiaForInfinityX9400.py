@@ -129,6 +129,16 @@ class NostalgiaForInfinityX9400(IStrategy):
   short_wick_rejection_enable = True
   short_wick_rejection_ratio = DecimalParameter(0.3, 0.7, default=0.5, decimals=2, space="sell", optimize=True)
 
+  # Volume Price Analysis Filter Parameters (LONG)
+  long_vpa_enable = False
+  long_vpa_min_green_candles = IntParameter(2, 5, default=3, space="buy", optimize=True)
+  long_vpa_volume_increase = DecimalParameter(1.1, 2.0, default=1.3, decimals=1, space="buy", optimize=True)
+  
+  # Volume Price Analysis Filter Parameters (SHORT)
+  short_vpa_enable = False
+  short_vpa_min_red_candles = IntParameter(2, 5, default=3, space="sell", optimize=True)
+  short_vpa_volume_increase = DecimalParameter(1.1, 2.0, default=1.3, decimals=1, space="sell", optimize=True)
+
   # Long/Short mode tags
   long_scalp_mode_tags = ["9400_long"]
   short_scalp_mode_tags = ["9400_short"]
@@ -272,6 +282,36 @@ class NostalgiaForInfinityX9400(IStrategy):
     df["upper_wick_ratio"] = df["upper_wick_ratio"].replace([np.inf, -np.inf], 0).fillna(0)
     df["lower_wick_ratio"] = df["lower_wick_ratio"].replace([np.inf, -np.inf], 0).fillna(0)
 
+    # Volume Price Analysis Indicators
+    # Green candles (bullish) with increasing volume
+    df["is_green"] = (df["close"] > df["open"]).astype(int)
+    df["is_red"] = (df["close"] < df["open"]).astype(int)
+    
+    # Volume increasing vs previous candle
+    df["volume_increase"] = df["volume"] > df["volume"].shift(1)
+    
+    # Count consecutive green candles with volume increase (bullish strength)
+    df["green_volume_candles"] = 0
+    for i in range(1, 6):  # Look back up to 5 candles
+      df["green_volume_candles"] += (
+        (df["is_green"].shift(i) == 1) & 
+        (df["volume"].shift(i) > df["volume"].shift(i+1))
+      ).astype(int)
+    
+    # Count consecutive red candles with volume increase (bearish strength)
+    df["red_volume_candles"] = 0
+    for i in range(1, 6):  # Look back up to 5 candles
+      df["red_volume_candles"] += (
+        (df["is_red"].shift(i) == 1) & 
+        (df["volume"].shift(i) > df["volume"].shift(i+1))
+      ).astype(int)
+    
+    # Volume trend (average volume of last 3 candles vs previous 3)
+    df["vol_recent_avg"] = df["volume"].rolling(window=3).mean()
+    df["vol_previous_avg"] = df["volume"].shift(3).rolling(window=3).mean()
+    df["volume_trend_up"] = df["vol_recent_avg"] > (df["vol_previous_avg"] * 1.1)
+    df["volume_trend_down"] = df["vol_recent_avg"] > (df["vol_previous_avg"] * 1.1)
+
     # Simple global protections
     df["protections_long_global"] = True
     df["protections_short_global"] = True
@@ -384,6 +424,15 @@ class NostalgiaForInfinityX9400(IStrategy):
       if self.long_wick_rejection_enable:
         # Reject if upper wick is too large (indicates rejection at higher prices)
         long_entry_logic.append(df["upper_wick_ratio"] < self.long_wick_rejection_ratio.value)
+      
+      # Volume Price Analysis Filter (LONG)
+      if self.long_vpa_enable:
+        # Require recent bullish candles with increasing volume
+        long_entry_logic.append(df["green_volume_candles"] >= self.long_vpa_min_green_candles.value)
+        # Require current volume to be higher than average
+        long_entry_logic.append(df["volume"] >= (df["scalp_vol_ma_5m"] * self.long_vpa_volume_increase.value))
+        # Require volume trending up
+        long_entry_logic.append(df["volume_trend_up"] == True)
 
       if long_entry_logic:
         df.loc[reduce(lambda x, y: x & y, long_entry_logic), "enter_tag"] += "9400_long "
@@ -421,6 +470,15 @@ class NostalgiaForInfinityX9400(IStrategy):
       if self.short_wick_rejection_enable:
         # Reject if lower wick is too large (indicates rejection at lower prices)
         short_entry_logic.append(df["lower_wick_ratio"] < self.short_wick_rejection_ratio.value)
+      
+      # Volume Price Analysis Filter (SHORT)
+      if self.short_vpa_enable:
+        # Require recent bearish candles with increasing volume
+        short_entry_logic.append(df["red_volume_candles"] >= self.short_vpa_min_red_candles.value)
+        # Require current volume to be higher than average
+        short_entry_logic.append(df["volume"] >= (df["scalp_vol_ma_5m"] * self.short_vpa_volume_increase.value))
+        # Require volume trending up (selling pressure)
+        short_entry_logic.append(df["volume_trend_down"] == True)
 
       if short_entry_logic:
         df.loc[reduce(lambda x, y: x & y, short_entry_logic), "enter_tag"] += "9400_short "

@@ -11,38 +11,44 @@
       "max_open_trades": 6
     },
     "buy": {
-      "buy_condition_7_rsi_1h_max": 81,
-      "buy_condition_7_rsi_1h_min": 58,
-      "buy_condition_7_rsi_5m_max": 80,
+      "buy_condition_7_rsi_1h_max": 80,
+      "buy_condition_7_rsi_1h_min": 53,
+      "buy_condition_7_rsi_5m_max": 75,
       "buy_condition_7_rsi_5m_min": 56,
-      "buy_condition_7_scalp_rsi_1h_max": 82,
-      "buy_condition_7_scalp_rsi_1h_min": 58,
-      "buy_condition_7_volume_15m_factor": 0.5,
-      "buy_condition_7_volume_5m_factor": 1.6
+      "buy_condition_7_scalp_rsi_1h_max": 76,
+      "buy_condition_7_scalp_rsi_1h_min": 55,
+      "buy_condition_7_volume_15m_factor": 0.6,
+      "buy_condition_7_volume_5m_factor": 2.4,
+      "long_vpa_min_green_candles": 4,
+      "long_vpa_volume_increase": 1.8,
+      "long_wick_rejection_ratio": 0.41
     },
     "sell": {
-      "short_condition_907_rsi_1h_max": 48,
+      "short_condition_907_rsi_1h_max": 50,
       "short_condition_907_rsi_1h_min": 20,
-      "short_condition_907_rsi_5m_max": 44,
+      "short_condition_907_rsi_5m_max": 40,
       "short_condition_907_rsi_5m_min": 29,
       "short_condition_907_scalp_rsi_1h_max": 50,
-      "short_condition_907_scalp_rsi_1h_min": 20,
-      "short_condition_907_volume_15m_factor": 0.8,
-      "short_condition_907_volume_5m_factor": 1.7
+      "short_condition_907_scalp_rsi_1h_min": 15,
+      "short_condition_907_volume_15m_factor": 0.5,
+      "short_condition_907_volume_5m_factor": 2.3,
+      "short_vpa_min_red_candles": 4,
+      "short_vpa_volume_increase": 1.2,
+      "short_wick_rejection_ratio": 0.65
     },
     "roi": {
-      "0": 0.077,
-      "21": 0.021,
-      "59": 0.011,
+      "0": 0.212,
+      "19": 0.031,
+      "49": 0.011,
       "115": 0
     },
     "stoploss": {
-      "stoploss": -0.201
+      "stoploss": -0.338
     },
     "leverage": {
-      "leverage_hyperopt": 1
+      "leverage_hyperopt": 3
     }
   },
   "ft_stratparam_v": 1,
-  "export_time": "2025-12-14 17:02:21.200998+00:00"
+  "export_time": "2025-12-19 18:46:28.175328+00:00"
 }
