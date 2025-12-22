@@ -173,9 +173,9 @@ class NostalgiaForInfinityX7(IStrategy):
   short_scalp_mode_name = "short_scalp"
 
   is_futures_mode = False
-  futures_mode_leverage = 3.0
-  futures_mode_leverage_rebuy_mode = 3.0
-  futures_mode_leverage_grind_mode = 3.0
+  futures_mode_leverage = 10.0
+  futures_mode_leverage_rebuy_mode = 10
+  futures_mode_leverage_grind_mode = 10
 
   # Limit the number of long/short trades for futures (0 for no limit)
   futures_max_open_trades_long = 0
