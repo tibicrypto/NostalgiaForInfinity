@@ -8,6 +8,7 @@ import pandas as pd
 import pandas_ta as pta
 from freqtrade.strategy.interface import IStrategy
 from freqtrade.strategy import merge_informative_pair
+from freqtrade.strategy import DecimalParameter, IntParameter, BooleanParameter
 from pandas import DataFrame, Series
 from functools import reduce
 from freqtrade.persistence import Trade, Order
@@ -173,9 +174,9 @@ class NostalgiaForInfinityX7(IStrategy):
   short_scalp_mode_name = "short_scalp"
 
   is_futures_mode = False
-  futures_mode_leverage = 5.0
-  futures_mode_leverage_rebuy_mode = 5
-  futures_mode_leverage_grind_mode = 5
+  futures_mode_leverage = IntParameter(1, 20, default=5, space="buy", optimize=True)
+  futures_mode_leverage_rebuy_mode = IntParameter(1, 20, default=5, space="buy", optimize=True)
+  futures_mode_leverage_grind_mode = IntParameter(1, 20, default=5, space="buy", optimize=True)
 
   # Limit the number of long/short trades for futures (0 for no limit)
   futures_max_open_trades_long = 0
@@ -2267,7 +2268,7 @@ class NostalgiaForInfinityX7(IStrategy):
     proposed_stake: float,
     min_stake: Optional[float],
     max_stake: float,
-    leverage: float,
+    leverage: int,
     entry_tag: Optional[str],
     side: str,
     **kwargs,
@@ -11557,17 +11558,19 @@ class NostalgiaForInfinityX7(IStrategy):
     current_time: datetime,
     current_rate: float,
     proposed_leverage: float,
-    max_leverage: float,
+    max_leverage: int,
     entry_tag: Optional[str],
     side: str,
     **kwargs,
   ) -> float:
+    if entry_tag is None:
+      return self.futures_mode_leverage.value
     enter_tags = entry_tag.split()
     if all(c in self.long_rebuy_mode_tags for c in enter_tags):
-      return self.futures_mode_leverage_rebuy_mode
+      return self.futures_mode_leverage_rebuy_mode.value
     elif all(c in self.long_grind_mode_tags for c in enter_tags):
-      return self.futures_mode_leverage_grind_mode
-    return self.futures_mode_leverage
+      return self.futures_mode_leverage_grind_mode.value
+    return self.futures_mode_leverage.value
 
   # Correct Min Stake
   # ---------------------------------------------------------------------------------------------

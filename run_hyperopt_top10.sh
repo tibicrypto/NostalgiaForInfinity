@@ -59,7 +59,7 @@ run_hyperopt() {
     --config "$CONFIG_PAIRLIST" \
     --timerange "$TIMERANGE" \
     --epochs 800 \
-    --spaces roi buy sell stoploss leverage\
+    --spaces buy \
     --random-state 42 \
     -j 2
   echo ""
