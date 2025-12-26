@@ -1,0 +1,292 @@
+{
+  "description": "30 leverage parameter combinations for multi-backtest",
+  "test_configurations": [
+    {
+      "test_id": 1,
+      "name": "Conservative - Low Leverage",
+      "params": {
+        "futures_mode_leverage": 3,
+        "futures_mode_leverage_grind_mode": 2,
+        "futures_mode_leverage_rebuy_mode": 2
+      }
+    },
+    {
+      "test_id": 2,
+      "name": "Conservative - Balanced",
+      "params": {
+        "futures_mode_leverage": 4,
+        "futures_mode_leverage_grind_mode": 3,
+        "futures_mode_leverage_rebuy_mode": 3
+      }
+    },
+    {
+      "test_id": 3,
+      "name": "Conservative - Moderate",
+      "params": {
+        "futures_mode_leverage": 5,
+        "futures_mode_leverage_grind_mode": 3,
+        "futures_mode_leverage_rebuy_mode": 3
+      }
+    },
+    {
+      "test_id": 4,
+      "name": "Moderate - Entry Level",
+      "params": {
+        "futures_mode_leverage": 6,
+        "futures_mode_leverage_grind_mode": 4,
+        "futures_mode_leverage_rebuy_mode": 4
+      }
+    },
+    {
+      "test_id": 5,
+      "name": "Moderate - Standard",
+      "params": {
+        "futures_mode_leverage": 7,
+        "futures_mode_leverage_grind_mode": 4,
+        "futures_mode_leverage_rebuy_mode": 4
+      }
+    },
+    {
+      "test_id": 6,
+      "name": "Moderate - Higher Grind",
+      "params": {
+        "futures_mode_leverage": 8,
+        "futures_mode_leverage_grind_mode": 5,
+        "futures_mode_leverage_rebuy_mode": 4
+      }
+    },
+    {
+      "test_id": 7,
+      "name": "Moderate - Balanced Mid",
+      "params": {
+        "futures_mode_leverage": 9,
+        "futures_mode_leverage_grind_mode": 5,
+        "futures_mode_leverage_rebuy_mode": 5
+      }
+    },
+    {
+      "test_id": 8,
+      "name": "Moderate-High - Entry",
+      "params": {
+        "futures_mode_leverage": 10,
+        "futures_mode_leverage_grind_mode": 5,
+        "futures_mode_leverage_rebuy_mode": 5
+      }
+    },
+    {
+      "test_id": 9,
+      "name": "Moderate-High - Higher Rebuy",
+      "params": {
+        "futures_mode_leverage": 10,
+        "futures_mode_leverage_grind_mode": 4,
+        "futures_mode_leverage_rebuy_mode": 6
+      }
+    },
+    {
+      "test_id": 10,
+      "name": "Moderate-High - Balanced",
+      "params": {
+        "futures_mode_leverage": 11,
+        "futures_mode_leverage_grind_mode": 5,
+        "futures_mode_leverage_rebuy_mode": 5
+      }
+    },
+    {
+      "test_id": 11,
+      "name": "High - Standard (Default)",
+      "params": {
+        "futures_mode_leverage": 12,
+        "futures_mode_leverage_grind_mode": 4,
+        "futures_mode_leverage_rebuy_mode": 4
+      }
+    },
+    {
+      "test_id": 12,
+      "name": "High - Balanced All",
+      "params": {
+        "futures_mode_leverage": 12,
+        "futures_mode_leverage_grind_mode": 6,
+        "futures_mode_leverage_rebuy_mode": 6
+      }
+    },
+    {
+      "test_id": 13,
+      "name": "High - Conservative Grind",
+      "params": {
+        "futures_mode_leverage": 12,
+        "futures_mode_leverage_grind_mode": 3,
+        "futures_mode_leverage_rebuy_mode": 5
+      }
+    },
+    {
+      "test_id": 14,
+      "name": "High - Aggressive Grind",
+      "params": {
+        "futures_mode_leverage": 12,
+        "futures_mode_leverage_grind_mode": 8,
+        "futures_mode_leverage_rebuy_mode": 4
+      }
+    },
+    {
+      "test_id": 15,
+      "name": "High - Step Up",
+      "params": {
+        "futures_mode_leverage": 13,
+        "futures_mode_leverage_grind_mode": 6,
+        "futures_mode_leverage_rebuy_mode": 6
+      }
+    },
+    {
+      "test_id": 16,
+      "name": "High - Upper Mid",
+      "params": {
+        "futures_mode_leverage": 14,
+        "futures_mode_leverage_grind_mode": 6,
+        "futures_mode_leverage_rebuy_mode": 6
+      }
+    },
+    {
+      "test_id": 17,
+      "name": "High - Extended",
+      "params": {
+        "futures_mode_leverage": 15,
+        "futures_mode_leverage_grind_mode": 7,
+        "futures_mode_leverage_rebuy_mode": 7
+      }
+    },
+    {
+      "test_id": 18,
+      "name": "High - Conservative Ratio",
+      "params": {
+        "futures_mode_leverage": 15,
+        "futures_mode_leverage_grind_mode": 5,
+        "futures_mode_leverage_rebuy_mode": 5
+      }
+    },
+    {
+      "test_id": 19,
+      "name": "Very High - Entry",
+      "params": {
+        "futures_mode_leverage": 16,
+        "futures_mode_leverage_grind_mode": 7,
+        "futures_mode_leverage_rebuy_mode": 7
+      }
+    },
+    {
+      "test_id": 20,
+      "name": "Very High - Balanced",
+      "params": {
+        "futures_mode_leverage": 18,
+        "futures_mode_leverage_grind_mode": 8,
+        "futures_mode_leverage_rebuy_mode": 8
+      }
+    },
+    {
+      "test_id": 21,
+      "name": "Very High - Standard",
+      "params": {
+        "futures_mode_leverage": 20,
+        "futures_mode_leverage_grind_mode": 8,
+        "futures_mode_leverage_rebuy_mode": 8
+      }
+    },
+    {
+      "test_id": 22,
+      "name": "Very High - Higher Grind",
+      "params": {
+        "futures_mode_leverage": 20,
+        "futures_mode_leverage_grind_mode": 10,
+        "futures_mode_leverage_rebuy_mode": 8
+      }
+    },
+    {
+      "test_id": 23,
+      "name": "Aggressive - Entry",
+      "params": {
+        "futures_mode_leverage": 22,
+        "futures_mode_leverage_grind_mode": 9,
+        "futures_mode_leverage_rebuy_mode": 9
+      }
+    },
+    {
+      "test_id": 24,
+      "name": "Aggressive - Balanced",
+      "params": {
+        "futures_mode_leverage": 25,
+        "futures_mode_leverage_grind_mode": 10,
+        "futures_mode_leverage_rebuy_mode": 10
+      }
+    },
+    {
+      "test_id": 25,
+      "name": "Aggressive - Conservative Ratio",
+      "params": {
+        "futures_mode_leverage": 25,
+        "futures_mode_leverage_grind_mode": 8,
+        "futures_mode_leverage_rebuy_mode": 8
+      }
+    },
+    {
+      "test_id": 26,
+      "name": "Very Aggressive - Entry",
+      "params": {
+        "futures_mode_leverage": 30,
+        "futures_mode_leverage_grind_mode": 12,
+        "futures_mode_leverage_rebuy_mode": 12
+      }
+    },
+    {
+      "test_id": 27,
+      "name": "Very Aggressive - High Grind",
+      "params": {
+        "futures_mode_leverage": 30,
+        "futures_mode_leverage_grind_mode": 15,
+        "futures_mode_leverage_rebuy_mode": 10
+      }
+    },
+    {
+      "test_id": 28,
+      "name": "Maximum - Conservative Ratio",
+      "params": {
+        "futures_mode_leverage": 40,
+        "futures_mode_leverage_grind_mode": 15,
+        "futures_mode_leverage_rebuy_mode": 15
+      }
+    },
+    {
+      "test_id": 29,
+      "name": "Maximum - Balanced",
+      "params": {
+        "futures_mode_leverage": 50,
+        "futures_mode_leverage_grind_mode": 20,
+        "futures_mode_leverage_rebuy_mode": 20
+      }
+    },
+    {
+      "test_id": 30,
+      "name": "Extreme - Test Limits",
+      "params": {
+        "futures_mode_leverage": 75,
+        "futures_mode_leverage_grind_mode": 25,
+        "futures_mode_leverage_rebuy_mode": 25
+      }
+    }
+  ],
+  "usage_notes": {
+    "description": "Use this file with option 10 in run_hyperopt_top10.sh",
+    "risk_levels": {
+      "conservative": "Tests 1-3 (leverage 3-5)",
+      "moderate": "Tests 4-10 (leverage 6-11)",
+      "high": "Tests 11-18 (leverage 12-15)",
+      "very_high": "Tests 19-22 (leverage 16-20)",
+      "aggressive": "Tests 23-27 (leverage 22-30)",
+      "maximum": "Tests 28-30 (leverage 40-75)"
+    },
+    "recommendations": {
+      "beginners": "Start with tests 1-5",
+      "intermediate": "Tests 6-15 are suitable",
+      "advanced": "Tests 16-25 for experienced traders",
+      "risk_takers": "Tests 26-30 (use with extreme caution)"
+    }
+  }
+}

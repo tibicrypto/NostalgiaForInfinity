@@ -1,0 +1,10 @@
+{
+  "strategy_name": "NostalgiaForInfinityX7",
+  "params": {
+    "buy": {
+      "futures_mode_leverage": 11,
+      "futures_mode_leverage_grind_mode": 5,
+      "futures_mode_leverage_rebuy_mode": 5
+    }
+  }
+}
