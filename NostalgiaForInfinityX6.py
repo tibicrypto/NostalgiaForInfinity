@@ -69,7 +69,7 @@ class NostalgiaForInfinityX6(IStrategy):
   INTERFACE_VERSION = 3
 
   def version(self) -> str:
-    return "v16.8.496"
+    return "v16.8.499"
 
   stoploss = -0.99
 
@@ -15406,6 +15406,8 @@ class NostalgiaForInfinityX6(IStrategy):
           )
           # 1h down move, 4h high
           long_entry_logic.append((df["RSI_3_1h"] > 5.0) | (df["AROONU_14_4h"] < 70.0))
+          # 1h down move, 1d still high
+          long_entry_logic.append((df["RSI_3_1h"] > 5.0) | (df["STOCHRSIk_14_14_3_3_1d"] < 50.0))
           # 1h & 4h down move, 4h still not low enough
           long_entry_logic.append((df["RSI_3_1h"] > 10.0) | (df["RSI_3_4h"] > 20.0) | (df["RSI_14_4h"] < 30.0))
           # 1h & 4h down move, 4h still not low enough
@@ -18018,6 +18020,8 @@ class NostalgiaForInfinityX6(IStrategy):
             & ((df["RSI_3_15m"] > 15.0) | (df["RSI_3_1h"] > 30.0) | (df["AROONU_14_15m"] < 40.0))
             # 15m & 1h down move, 1h high
             & ((df["RSI_3_15m"] > 15.0) | (df["RSI_3_1h"] > 30.0) | (df["AROONU_14_1h"] < 70.0))
+            # 15m & 1h down move, 1h high
+            & ((df["RSI_3_15m"] > 15.0) | (df["RSI_3_1h"] > 30.0) | (df["STOCHRSIk_14_14_3_3_1h"] < 70.0))
             # 15m & 1h & 4h down move, 4h high
             & ((df["RSI_3_15m"] > 15.0) | (df["RSI_3_1h"] > 35.0) | (df["RSI_3_4h"] > 65.0) | (df["MFI_14_4h"] < 85.0))
             # 15m & 1h down move, 15m high
@@ -18119,6 +18123,8 @@ class NostalgiaForInfinityX6(IStrategy):
             )
             # 15m down move, 1h & 4h high
             & ((df["RSI_3_15m"] > 20.0) | (df["AROONU_14_1h"] < 90.0) | (df["AROONU_14_4h"] < 100.0))
+            # 15m down move, 1h high & overbought
+            & ((df["RSI_3_15m"] > 20.0) | (df["STOCHRSIk_14_14_3_3_1h"] < 80.0) | (df["ROC_9_1h"] < 10.0))
             # 15m down move, 4h downtrend, 4h overbought
             & ((df["RSI_3_15m"] > 20.0) | (df["CMF_20_4h"] > -0.0) | (df["ROC_9_4h"] < 40.0))
             # 15m down move, 4h high, 1d downtrend
@@ -18251,6 +18257,8 @@ class NostalgiaForInfinityX6(IStrategy):
             )
             # 1h downtrend, 4h high, 1d downtrend
             & ((df["CMF_20_1h"] > -0.2) | (df["STOCHRSIk_14_14_3_3_4h"] < 90.0) | (df["CMF_20_1d"] > -0.25))
+            # 4h & 1d high, 1d overbought
+            & ((df["AROONU_14_4h"] < 100.0) | (df["AROONU_14_1d"] < 100.0) | (df["ROC_9_1d"] < 30.0))
             # 4h top wick, 15m & 1h down move
             & ((df["top_wick_pct_4h"] < 10.0) | (df["RSI_3_15m"] > 15.0) | (df["RSI_3_1h"] > 40.0))
             # 4h top wick, 1h down move, 1h high
