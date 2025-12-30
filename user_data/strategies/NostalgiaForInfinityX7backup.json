@@ -1,0 +1,25 @@
+{
+  "strategy_name": "NostalgiaForInfinityX7",
+  "params": {
+    "roi": {},
+    "stoploss": {
+      "stoploss": -0.99
+    },
+    "trailing": {
+      "trailing_stop": false,
+      "trailing_stop_positive": 0.01,
+      "trailing_stop_positive_offset": 0.03,
+      "trailing_only_offset_is_reached": true
+    },
+    "max_open_trades": {
+      "max_open_trades": 6
+    },
+    "buy": {
+      "futures_mode_leverage": 12,
+      "futures_mode_leverage_grind_mode": 4,
+      "futures_mode_leverage_rebuy_mode": 4
+    }
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2025-12-30 12:36:19.485277+00:00"
+}
