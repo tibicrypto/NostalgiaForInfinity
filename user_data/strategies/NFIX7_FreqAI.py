@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from freqtrade.strategy import IStrategy, IntParameter, DecimalParameter
-from freqai.prediction_models.reinforcement_learner import ReinforcementLearner
+from freqtrade.freqai.prediction_models.reinforcement_learner import ReinforcementLearner
 
 # --- CẤU HÌNH IMPORT TỰ ĐỘNG ---
 # Thêm đường dẫn hiện tại để tìm thấy file NostalgiaForInfinityX7.py
