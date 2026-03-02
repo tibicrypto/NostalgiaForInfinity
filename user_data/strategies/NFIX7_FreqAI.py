@@ -66,11 +66,14 @@ class NFIX7_FreqAI(IStrategy):
         Hàm quan trọng nhất: Biến chỉ báo của NFIX7 thành Feature cho AI
         """
         # 1. Gọi NFIX7 tính toán chỉ báo
-        # Copy dataframe để tránh xung đột dữ liệu gốc
+        # Copy dataframe và đảm bảo có cột 'date'
         df_nfix7 = dataframe.copy()
         
-        # Thêm cột 'date' từ index nếu chưa có (NFIX7 có thể cần nó)
-        if 'date' not in df_nfix7.columns:
+        # Reset index để có cột 'date' cho NFIX7 (NFIX7 cần 'date' làm column)
+        if df_nfix7.index.name == 'date' or isinstance(df_nfix7.index, pd.DatetimeIndex):
+            df_nfix7 = df_nfix7.reset_index()
+        elif 'date' not in df_nfix7.columns:
+            # Nếu index không phải datetime, tạo date từ index
             df_nfix7['date'] = df_nfix7.index
         
         # Gọi hàm populate_indicators của NFIX7
@@ -93,7 +96,7 @@ class NFIX7_FreqAI(IStrategy):
                     feature_name = f"%-{col}_nfi"
                     
                     # Gán giá trị sang dataframe chính
-                    dataframe[feature_name] = df_nfix7[col]
+                    dataframe[feature_name] = df_nfix7[col].values
                     
                     # Chuyển đổi Boolean (True/False) thành Int (1/0)
                     if dataframe[feature_name].dtype == 'bool':
