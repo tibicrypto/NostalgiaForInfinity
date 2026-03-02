@@ -69,6 +69,10 @@ class NFIX7_FreqAI(IStrategy):
         # Copy dataframe để tránh xung đột dữ liệu gốc
         df_nfix7 = dataframe.copy()
         
+        # Thêm cột 'date' từ index nếu chưa có (NFIX7 có thể cần nó)
+        if 'date' not in df_nfix7.columns:
+            df_nfix7['date'] = df_nfix7.index
+        
         # Gọi hàm populate_indicators của NFIX7
         # Hàm này của NFIX7 rất phức tạp, nó sẽ tạo ra RSI, BB, MFI, v.v...
         df_nfix7 = self.orig_strat.populate_indicators(df_nfix7, metadata)
