@@ -52,9 +52,14 @@ class NFIX7_FreqAI(IStrategy):
         if self.dp:
             self.orig_strat.dp = self.dp
         super().bot_start(**kwargs)
-        # Gọi bot_start của chiến thuật con nếu có
-        if hasattr(self.orig_strat, 'bot_loop_start'):
-             self.orig_strat.bot_loop_start(**kwargs)
+
+    def bot_loop_start(self, current_time, **kwargs) -> None:
+        """
+        Gọi bot_loop_start của chiến thuật NFIX7
+        """
+        if self.orig_strat and hasattr(self.orig_strat, 'bot_loop_start'):
+            self.orig_strat.bot_loop_start(current_time, **kwargs)
+        return super().bot_loop_start(current_time, **kwargs)
 
     def feature_engineering_standard(self, dataframe, metadata, **kwargs):
         """
