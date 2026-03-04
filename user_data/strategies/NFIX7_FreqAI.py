@@ -30,17 +30,31 @@ class DataProviderWrapper:
         """Forward tất cả các phương thức khác tới DataProvider gốc"""
         return getattr(self._dp, name)
     
+    def _ensure_date_column(self, df):
+        """Helper method to ensure dataframe has 'date' column"""
+        if df is None or df.empty:
+            return df
+        
+        if 'date' not in df.columns:
+            if isinstance(df.index, pd.DatetimeIndex) or df.index.name == 'date':
+                df = df.reset_index()
+            else:
+                df = df.copy()
+                df['date'] = df.index
+        return df
+    
     def get_pair_dataframe(self, pair, timeframe):
         """Override để thêm cột 'date' vào dataframe"""
         df = self._dp.get_pair_dataframe(pair, timeframe)
-        if df is not None and not df.empty:
-            # Nếu chưa có cột 'date', tạo từ index
-            if 'date' not in df.columns:
-                if isinstance(df.index, pd.DatetimeIndex) or df.index.name == 'date':
-                    df = df.reset_index()
-                else:
-                    df['date'] = df.index
-        return df
+        return self._ensure_date_column(df)
+    
+    def get_analyzed_dataframe(self, pair, timeframe):
+        """Override để thêm cột 'date' vào analyzed dataframe"""
+        if hasattr(self._dp, 'get_analyzed_dataframe'):
+            df, last_update = self._dp.get_analyzed_dataframe(pair, timeframe)
+            df = self._ensure_date_column(df)
+            return df, last_update
+        return None, None
 
 class NFIX7_FreqAI(IStrategy):
     """
@@ -89,45 +103,57 @@ class NFIX7_FreqAI(IStrategy):
         """
         Hàm quan trọng nhất: Biến chỉ báo của NFIX7 thành Feature cho AI
         """
-        # 1. Gọi NFIX7 tính toán chỉ báo
-        # Copy dataframe và đảm bảo có cột 'date'
-        df_nfix7 = dataframe.copy()
-        
-        # Reset index để có cột 'date' cho NFIX7 (NFIX7 cần 'date' làm column)
-        if df_nfix7.index.name == 'date' or isinstance(df_nfix7.index, pd.DatetimeIndex):
-            df_nfix7 = df_nfix7.reset_index()
-        elif 'date' not in df_nfix7.columns:
-            # Nếu index không phải datetime, tạo date từ index
-            df_nfix7['date'] = df_nfix7.index
-        
-        # Gọi hàm populate_indicators của NFIX7
-        # Hàm này của NFIX7 rất phức tạp, nó sẽ tạo ra RSI, BB, MFI, v.v...
-        df_nfix7 = self.orig_strat.populate_indicators(df_nfix7, metadata)
-        
-        # 2. Gọi logic vào lệnh của NFIX7 (để lấy tín hiệu Buy làm feature)
-        # AI sẽ học được: "Khi NFIX7 bảo Mua thì xác suất thắng là bao nhiêu?"
-        df_nfix7 = self.orig_strat.populate_entry_trend(df_nfix7, metadata)
+        try:
+            # 1. Gọi NFIX7 tính toán chỉ báo
+            # Copy dataframe và đảm bảo có cột 'date'
+            df_nfix7 = dataframe.copy()
+            
+            # Reset index để có cột 'date' cho NFIX7 (NFIX7 cần 'date' làm column)
+            if df_nfix7.index.name == 'date' or isinstance(df_nfix7.index, pd.DatetimeIndex):
+                df_nfix7 = df_nfix7.reset_index()
+            elif 'date' not in df_nfix7.columns:
+                # Nếu index không phải datetime, tạo date từ index
+                df_nfix7['date'] = df_nfix7.index
+            
+            # Đảm bảo orig_strat có DataProvider được wrap
+            if not isinstance(self.orig_strat.dp, DataProviderWrapper):
+                if self.dp:
+                    self.orig_strat.dp = DataProviderWrapper(self.dp)
+            
+            # Gọi hàm populate_indicators của NFIX7
+            # Hàm này của NFIX7 rất phức tạp, nó sẽ tạo ra RSI, BB, MFI, v.v...
+            df_nfix7 = self.orig_strat.populate_indicators(df_nfix7, metadata)
+            
+            # 2. Gọi logic vào lệnh của NFIX7 (để lấy tín hiệu Buy làm feature)
+            # AI sẽ học được: "Khi NFIX7 bảo Mua thì xác suất thắng là bao nhiêu?"
+            df_nfix7 = self.orig_strat.populate_entry_trend(df_nfix7, metadata)
 
-        # 3. Lọc và đổi tên các cột để làm đầu vào cho FreqAI
-        # Các cột không nên đưa vào AI (dữ liệu thô, text)
-        exclude_cols = ['date', 'open', 'high', 'low', 'close', 'volume', 'enter_tag', 'buy_tag']
-        
-        for col in df_nfix7.columns:
-            if col not in exclude_cols:
-                # Kiểm tra kiểu dữ liệu (chỉ lấy số và boolean)
-                if df_nfix7[col].dtype.kind in 'biufc':
-                    # Đặt tên cột bắt đầu bằng "%-" để FreqAI nhận diện là Extra Feature
-                    feature_name = f"%-{col}_nfi"
-                    
-                    # Gán giá trị sang dataframe chính
-                    dataframe[feature_name] = df_nfix7[col].values
-                    
-                    # Chuyển đổi Boolean (True/False) thành Int (1/0)
-                    if dataframe[feature_name].dtype == 'bool':
-                        dataframe[feature_name] = dataframe[feature_name].astype(int)
-        
-        # Thêm Log Volume (Feature thường dùng cho AI)
-        dataframe["%-log_volume"] = np.log1p(dataframe["volume"])
+            # 3. Lọc và đổi tên các cột để làm đầu vào cho FreqAI
+            # Các cột không nên đưa vào AI (dữ liệu thô, text)
+            exclude_cols = ['date', 'open', 'high', 'low', 'close', 'volume', 'enter_tag', 'buy_tag']
+            
+            for col in df_nfix7.columns:
+                if col not in exclude_cols:
+                    # Kiểm tra kiểu dữ liệu (chỉ lấy số và boolean)
+                    if df_nfix7[col].dtype.kind in 'biufc':
+                        # Đặt tên cột bắt đầu bằng "%-" để FreqAI nhận diện là Extra Feature
+                        feature_name = f"%-{col}_nfi"
+                        
+                        # Gán giá trị sang dataframe chính
+                        dataframe[feature_name] = df_nfix7[col].values
+                        
+                        # Chuyển đổi Boolean (True/False) thành Int (1/0)
+                        if dataframe[feature_name].dtype == 'bool':
+                            dataframe[feature_name] = dataframe[feature_name].astype(int)
+            
+            # Thêm Log Volume (Feature thường dùng cho AI)
+            dataframe["%-log_volume"] = np.log1p(dataframe["volume"])
+            
+        except Exception as e:
+            log.error(f"Error in feature_engineering_standard for {metadata['pair']}: {e}")
+            log.exception(e)
+            # Return dataframe with minimal features on error
+            dataframe["%-log_volume"] = np.log1p(dataframe["volume"])
         
         return dataframe
 
