@@ -1,1 +1,0 @@
-{"extra_returns_per_train":{},"filter_drop_index_training":null,"labels_mean":{"up":0,"down":0},"labels_std":{"up":0,"down":0},"data_path":"/home/tibi/NostalgiaForInfinity/user_data/models/nfix7-ensemble/sub-train-DOGE_1772634166","model_filename":"cb_doge_1772634166","training_features_list":["%-log_volume"],"label_list":["&s-up_or_down"]}

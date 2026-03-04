@@ -1,1 +1,0 @@
-{"extra_returns_per_train":{},"filter_drop_index_training":null,"labels_mean":{"down":0,"up":0},"labels_std":{"down":0,"up":0},"data_path":"/home/tibi/NostalgiaForInfinity/user_data/models/nfix7-ensemble/sub-train-ICP_1772634476","model_filename":"cb_icp_1772634476","training_features_list":["%-log_volume"],"label_list":["&s-up_or_down"]}
