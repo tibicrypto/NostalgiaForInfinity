@@ -110,15 +110,17 @@ class NFIX7_FreqAI(IStrategy):
             
             # Reset index để có cột 'date' cho NFIX7 (NFIX7 cần 'date' làm column)
             if df_nfix7.index.name == 'date' or isinstance(df_nfix7.index, pd.DatetimeIndex):
-                df_nfix7 = df_nfix7.reset_index()
+                df_nfix7 = df_nfix7.reset_index(drop=False)
+                # Đảm bảo 'date' là tên cột, không phải 'index'
+                if 'index' in df_nfix7.columns and 'date' not in df_nfix7.columns:
+                    df_nfix7.rename(columns={'index': 'date'}, inplace=True)
             elif 'date' not in df_nfix7.columns:
                 # Nếu index không phải datetime, tạo date từ index
                 df_nfix7['date'] = df_nfix7.index
             
             # Đảm bảo orig_strat có DataProvider được wrap
-            if not isinstance(self.orig_strat.dp, DataProviderWrapper):
-                if self.dp:
-                    self.orig_strat.dp = DataProviderWrapper(self.dp)
+            if self.dp and not isinstance(self.orig_strat.dp, DataProviderWrapper):
+                self.orig_strat.dp = DataProviderWrapper(self.dp)
             
             # Gọi hàm populate_indicators của NFIX7
             # Hàm này của NFIX7 rất phức tạp, nó sẽ tạo ra RSI, BB, MFI, v.v...
