@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from freqtrade.strategy import IStrategy, IntParameter, DecimalParameter
+from pandas import DataFrame
 
 # --- CẤU HÌNH IMPORT TỰ ĐỘNG ---
 # Thêm đường dẫn hiện tại để tìm thấy file NostalgiaForInfinityX7.py
@@ -18,6 +19,28 @@ except ImportError:
         pass
 
 log = logging.getLogger(__name__)
+
+# Wrapper cho DataProvider để đảm bảo tất cả dataframe có cột 'date'
+class DataProviderWrapper:
+    """Wrapper để đảm bảo tất cả dataframe trả về có cột 'date'"""
+    def __init__(self, dp):
+        self._dp = dp
+    
+    def __getattr__(self, name):
+        """Forward tất cả các phương thức khác tới DataProvider gốc"""
+        return getattr(self._dp, name)
+    
+    def get_pair_dataframe(self, pair, timeframe):
+        """Override để thêm cột 'date' vào dataframe"""
+        df = self._dp.get_pair_dataframe(pair, timeframe)
+        if df is not None and not df.empty:
+            # Nếu chưa có cột 'date', tạo từ index
+            if 'date' not in df.columns:
+                if isinstance(df.index, pd.DatetimeIndex) or df.index.name == 'date':
+                    df = df.reset_index()
+                else:
+                    df['date'] = df.index
+        return df
 
 class NFIX7_FreqAI(IStrategy):
     """
@@ -50,7 +73,8 @@ class NFIX7_FreqAI(IStrategy):
         Gắn DataProvider (dp) cho chiến thuật con để nó lấy được dữ liệu thị trường
         """
         if self.dp:
-            self.orig_strat.dp = self.dp
+            # Wrap DataProvider để đảm bảo tất cả dataframe có cột 'date'
+            self.orig_strat.dp = DataProviderWrapper(self.dp)
         super().bot_start(**kwargs)
 
     def bot_loop_start(self, current_time, **kwargs) -> None:
