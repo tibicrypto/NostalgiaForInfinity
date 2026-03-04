@@ -176,27 +176,24 @@ class NFIX7_FreqAI(IStrategy):
     def populate_entry_trend(self, dataframe, metadata):
         # Logic vào lệnh dựa trên phán đoán của AI
         
-        if self.freqai.is_prediction_active(dataframe, metadata):
-            
-            # Điều kiện 1: AI dự đoán Tăng ("up")
-            # Điều kiện 2: Độ tin cậy > 0.6 (60%)
-            # Điều kiện 3: Có thể kết hợp với logic NFIX7 gốc nếu muốn (ví dụ: AND %-enter_long_nfi == 1)
-            
-            dataframe.loc[
-                (dataframe['do_predict'] == 1) &
-                (dataframe['&s-up_or_down'] == 'up') &
-                (dataframe['&s-up_or_down_probs'] > 0.6),
-                'enter_long'] = 1
+        # Điều kiện 1: AI dự đoán Tăng ("up")
+        # Điều kiện 2: Độ tin cậy > 0.6 (60%)
+        # Điều kiện 3: Có thể kết hợp với logic NFIX7 gốc nếu muốn (ví dụ: AND %-enter_long_nfi == 1)
+        
+        dataframe.loc[
+            (dataframe['do_predict'] == 1) &
+            (dataframe['&s-up_or_down'] == 'up') &
+            (dataframe['&s-up_or_down_probs'] > 0.6),
+            'enter_long'] = 1
 
         return dataframe
 
     def populate_exit_trend(self, dataframe, metadata):
         # Thoát lệnh dựa trên AI hoặc Stoploss
-        if self.freqai.is_prediction_active(dataframe, metadata):
-            dataframe.loc[
-                (dataframe['do_predict'] == 1) &
-                (dataframe['&s-up_or_down'] == 'down') &
-                (dataframe['&s-up_or_down_probs'] > 0.7),
-                'exit_long'] = 1
+        dataframe.loc[
+            (dataframe['do_predict'] == 1) &
+            (dataframe['&s-up_or_down'] == 'down') &
+            (dataframe['&s-up_or_down_probs'] > 0.7),
+            'exit_long'] = 1
                 
         return dataframe
