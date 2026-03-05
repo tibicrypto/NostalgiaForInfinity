@@ -36,11 +36,16 @@ class DataProviderWrapper:
             return df
         
         if 'date' not in df.columns:
-            if isinstance(df.index, pd.DatetimeIndex) or df.index.name == 'date':
+            if isinstance(df.index, pd.DatetimeIndex):
                 df = df.reset_index()
+                # If the first column is not 'date', rename it
+                if df.columns[0] != 'date':
+                    df.rename(columns={df.columns[0]: 'date'}, inplace=True)
             else:
                 df = df.copy()
-                df['date'] = df.index
+                df.reset_index(inplace=True)
+                if 'date' not in df.columns:
+                    df.rename(columns={'index': 'date'}, inplace=True)
         return df
     
     def get_pair_dataframe(self, pair, timeframe):
@@ -108,15 +113,19 @@ class NFIX7_FreqAI(IStrategy):
             # Copy dataframe và đảm bảo có cột 'date'
             df_nfix7 = dataframe.copy()
             
-            # Reset index để có cột 'date' cho NFIX7 (NFIX7 cần 'date' làm column)
-            if df_nfix7.index.name == 'date' or isinstance(df_nfix7.index, pd.DatetimeIndex):
-                df_nfix7 = df_nfix7.reset_index(drop=False)
-                # Đảm bảo 'date' là tên cột, không phải 'index'
-                if 'index' in df_nfix7.columns and 'date' not in df_nfix7.columns:
-                    df_nfix7.rename(columns={'index': 'date'}, inplace=True)
-            elif 'date' not in df_nfix7.columns:
-                # Nếu index không phải datetime, tạo date từ index
-                df_nfix7['date'] = df_nfix7.index
+            # Đảm bảo 'date' là cột, không phải index
+            if 'date' not in df_nfix7.columns:
+                # Nếu index là datetime hoặc tên là 'date', chuyển thành cột
+                if isinstance(df_nfix7.index, pd.DatetimeIndex):
+                    df_nfix7.reset_index(inplace=True)
+                    # Nếu tên index không phải 'date', đổi thành 'date'
+                    if df_nfix7.columns[0] != 'date':
+                        df_nfix7.rename(columns={df_nfix7.columns[0]: 'date'}, inplace=True)
+                else:
+                    # Nếu không có datetime index, tạo date từ index
+                    df_nfix7.reset_index(inplace=True)
+                    if 'date' not in df_nfix7.columns:
+                        df_nfix7.rename(columns={'index': 'date'}, inplace=True)
             
             # Đảm bảo orig_strat có DataProvider được wrap
             if self.dp and not isinstance(self.orig_strat.dp, DataProviderWrapper):
@@ -179,13 +188,11 @@ class NFIX7_FreqAI(IStrategy):
         # Logic vào lệnh dựa trên phán đoán của AI
         
         # Điều kiện 1: AI dự đoán Tăng ("up")
-        # Điều kiện 2: Độ tin cậy > 0.6 (60%)
-        # Điều kiện 3: Có thể kết hợp với logic NFIX7 gốc nếu muốn (ví dụ: AND %-enter_long_nfi == 1)
+        # Điều kiện 2: Có thể kết hợp với logic NFIX7 gốc nếu muốn (ví dụ: AND %-enter_long_nfi == 1)
         
         dataframe.loc[
             (dataframe['do_predict'] == 1) &
-            (dataframe['&s-up_or_down'] == 'up') &
-            (dataframe['&s-up_or_down_probs'] > 0.6),
+            (dataframe['&s-up_or_down'] == 'up'),
             'enter_long'] = 1
 
         return dataframe
@@ -194,8 +201,7 @@ class NFIX7_FreqAI(IStrategy):
         # Thoát lệnh dựa trên AI hoặc Stoploss
         dataframe.loc[
             (dataframe['do_predict'] == 1) &
-            (dataframe['&s-up_or_down'] == 'down') &
-            (dataframe['&s-up_or_down_probs'] > 0.7),
+            (dataframe['&s-up_or_down'] == 'down'),
             'exit_long'] = 1
                 
         return dataframe
