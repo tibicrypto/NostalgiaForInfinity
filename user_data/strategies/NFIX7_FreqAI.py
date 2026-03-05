@@ -36,16 +36,29 @@ class DataProviderWrapper:
             return df
         
         if 'date' not in df.columns:
-            if isinstance(df.index, pd.DatetimeIndex):
-                df = df.reset_index()
-                # If the first column is not 'date', rename it
-                if df.columns[0] != 'date':
-                    df.rename(columns={df.columns[0]: 'date'}, inplace=True)
-            else:
-                df = df.copy()
-                df.reset_index(inplace=True)
-                if 'date' not in df.columns:
-                    df.rename(columns={'index': 'date'}, inplace=True)
+            # Always make a copy to avoid modifying the original
+            df = df.copy()
+            
+            # Save original columns to detect which one was added by reset_index
+            orig_cols = set(df.columns)
+            
+            # Reset index to make it a column
+            df.reset_index(drop=False, inplace=True)
+            
+            # Find the new column created by reset_index
+            new_cols = set(df.columns) - orig_cols
+            
+            if new_cols and 'date' not in df.columns:
+                # Rename the new column to 'date'
+                new_col_name = list(new_cols)[0]
+                df.rename(columns={new_col_name: 'date'}, inplace=True)
+            elif 'date' not in df.columns and len(df.columns) > 0:
+                # Fallback: if somehow no new column detected, try common names
+                for possible_name in ['index', df.index.name] + list(df.columns[:1]):
+                    if possible_name and possible_name in df.columns and possible_name != 'date':
+                        df.rename(columns={possible_name: 'date'}, inplace=True)
+                        break
+        
         return df
     
     def get_pair_dataframe(self, pair, timeframe):
@@ -72,6 +85,9 @@ class NFIX7_FreqAI(IStrategy):
     minimal_roi = {"0": 0.1, "30": 0.05, "60": 0.01}
     stoploss = -0.25 
     timeframe = '5m'
+    
+    # Enable short trading
+    can_short = True
     
     # Khai báo biến chứa chiến thuật gốc
     orig_strat = None
@@ -115,17 +131,19 @@ class NFIX7_FreqAI(IStrategy):
             
             # Đảm bảo 'date' là cột, không phải index
             if 'date' not in df_nfix7.columns:
-                # Nếu index là datetime hoặc tên là 'date', chuyển thành cột
-                if isinstance(df_nfix7.index, pd.DatetimeIndex):
-                    df_nfix7.reset_index(inplace=True)
-                    # Nếu tên index không phải 'date', đổi thành 'date'
-                    if df_nfix7.columns[0] != 'date':
-                        df_nfix7.rename(columns={df_nfix7.columns[0]: 'date'}, inplace=True)
-                else:
-                    # Nếu không có datetime index, tạo date từ index
-                    df_nfix7.reset_index(inplace=True)
-                    if 'date' not in df_nfix7.columns:
-                        df_nfix7.rename(columns={'index': 'date'}, inplace=True)
+                # Save original columns to detect which one was added by reset_index
+                orig_cols = set(df_nfix7.columns)
+                
+                # Reset index to make it a column
+                df_nfix7.reset_index(drop=False, inplace=True)
+                
+                # Find the new column created by reset_index
+                new_cols = set(df_nfix7.columns) - orig_cols
+                
+                if new_cols and 'date' not in df_nfix7.columns:
+                    # Rename the new column to 'date'
+                    new_col_name = list(new_cols)[0]
+                    df_nfix7.rename(columns={new_col_name: 'date'}, inplace=True)
             
             # Đảm bảo orig_strat có DataProvider được wrap
             if self.dp and not isinstance(self.orig_strat.dp, DataProviderWrapper):
@@ -187,21 +205,33 @@ class NFIX7_FreqAI(IStrategy):
     def populate_entry_trend(self, dataframe, metadata):
         # Logic vào lệnh dựa trên phán đoán của AI
         
-        # Điều kiện 1: AI dự đoán Tăng ("up")
-        # Điều kiện 2: Có thể kết hợp với logic NFIX7 gốc nếu muốn (ví dụ: AND %-enter_long_nfi == 1)
-        
+        # LONG: AI dự đoán Tăng ("up")
         dataframe.loc[
             (dataframe['do_predict'] == 1) &
             (dataframe['&s-up_or_down'] == 'up'),
             'enter_long'] = 1
 
+        # SHORT: AI dự đoán Giảm ("down")
+        dataframe.loc[
+            (dataframe['do_predict'] == 1) &
+            (dataframe['&s-up_or_down'] == 'down'),
+            'enter_short'] = 1
+
         return dataframe
 
     def populate_exit_trend(self, dataframe, metadata):
-        # Thoát lệnh dựa trên AI hoặc Stoploss
+        # Thoát lệnh dựa trên AI
+        
+        # Exit LONG khi AI dự đoán Giảm
         dataframe.loc[
             (dataframe['do_predict'] == 1) &
             (dataframe['&s-up_or_down'] == 'down'),
             'exit_long'] = 1
+        
+        # Exit SHORT khi AI dự đoán Tăng
+        dataframe.loc[
+            (dataframe['do_predict'] == 1) &
+            (dataframe['&s-up_or_down'] == 'up'),
+            'exit_short'] = 1
                 
         return dataframe
