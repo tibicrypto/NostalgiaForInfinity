@@ -3717,6 +3717,9 @@ class NostalgiaForInfinityX7(IStrategy):
   def btc_info_1d_indicators(self, btc_info_pair, btc_info_timeframe, metadata: dict) -> DataFrame:
     tik = time.perf_counter()
     btc_info_1d = self.dp.get_pair_dataframe(btc_info_pair, btc_info_timeframe)
+    # Reset index to have 'date' as a column for merge_informative_pair
+    if btc_info_1d.index.name == 'date' or 'date' not in btc_info_1d.columns:
+      btc_info_1d = btc_info_1d.reset_index()
     # Indicators
     # -----------------------------------------------------------------------------------------
     # btc_info_1d_indicators_pandas_ta = pta.Strategy(
@@ -3755,6 +3758,9 @@ class NostalgiaForInfinityX7(IStrategy):
   def btc_info_4h_indicators(self, btc_info_pair, btc_info_timeframe, metadata: dict) -> DataFrame:
     tik = time.perf_counter()
     btc_info_4h = self.dp.get_pair_dataframe(btc_info_pair, btc_info_timeframe)
+    # Reset index to have 'date' as a column for merge_informative_pair
+    if btc_info_4h.index.name == 'date' or 'date' not in btc_info_4h.columns:
+      btc_info_4h = btc_info_4h.reset_index()
     # Indicators
     # -----------------------------------------------------------------------------------------
 
@@ -3773,6 +3779,9 @@ class NostalgiaForInfinityX7(IStrategy):
   def btc_info_1h_indicators(self, btc_info_pair, btc_info_timeframe, metadata: dict) -> DataFrame:
     tik = time.perf_counter()
     btc_info_1h = self.dp.get_pair_dataframe(btc_info_pair, btc_info_timeframe)
+    # Reset index to have 'date' as a column for merge_informative_pair
+    if btc_info_1h.index.name == 'date' or 'date' not in btc_info_1h.columns:
+      btc_info_1h = btc_info_1h.reset_index()
     # Indicators
     # -----------------------------------------------------------------------------------------
 
@@ -3791,6 +3800,9 @@ class NostalgiaForInfinityX7(IStrategy):
   def btc_info_15m_indicators(self, btc_info_pair, btc_info_timeframe, metadata: dict) -> DataFrame:
     tik = time.perf_counter()
     btc_info_15m = self.dp.get_pair_dataframe(btc_info_pair, btc_info_timeframe)
+    # Reset index to have 'date' as a column for merge_informative_pair
+    if btc_info_15m.index.name == 'date' or 'date' not in btc_info_15m.columns:
+      btc_info_15m = btc_info_15m.reset_index()
     # Indicators
     # -----------------------------------------------------------------------------------------
 
@@ -3809,6 +3821,9 @@ class NostalgiaForInfinityX7(IStrategy):
   def btc_info_5m_indicators(self, btc_info_pair, btc_info_timeframe, metadata: dict) -> DataFrame:
     tik = time.perf_counter()
     btc_info_5m = self.dp.get_pair_dataframe(btc_info_pair, btc_info_timeframe)
+    # Reset index to have 'date' as a column for merge_informative_pair
+    if btc_info_5m.index.name == 'date' or 'date' not in btc_info_5m.columns:
+      btc_info_5m = btc_info_5m.reset_index()
     # Indicators
     # -----------------------------------------------------------------------------------------
 
