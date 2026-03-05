@@ -1,6 +1,8 @@
 import logging
 import sys
 from pathlib import Path
+from functools import reduce
+import operator
 import numpy as np
 import pandas as pd
 from freqtrade.strategy import IStrategy, IntParameter, DecimalParameter
@@ -156,10 +158,14 @@ class NFIX7_FreqAI(IStrategy):
             # 2. Gọi logic vào lệnh của NFIX7 (để lấy tín hiệu Buy làm feature)
             # AI sẽ học được: "Khi NFIX7 bảo Mua thì xác suất thắng là bao nhiêu?"
             df_nfix7 = self.orig_strat.populate_entry_trend(df_nfix7, metadata)
+            
+            # 3. Gọi logic thoát lệnh của NFIX7 (để lấy tín hiệu Exit làm feature)
+            if hasattr(self.orig_strat, 'populate_exit_trend'):
+                df_nfix7 = self.orig_strat.populate_exit_trend(df_nfix7, metadata)
 
-            # 3. Lọc và đổi tên các cột để làm đầu vào cho FreqAI
+            # 4. Lọc và đổi tên các cột để làm đầu vào cho FreqAI
             # Các cột không nên đưa vào AI (dữ liệu thô, text)
-            exclude_cols = ['date', 'open', 'high', 'low', 'close', 'volume', 'enter_tag', 'buy_tag']
+            exclude_cols = ['date', 'open', 'high', 'low', 'close', 'volume', 'enter_tag', 'buy_tag', 'exit_tag']
             
             for col in df_nfix7.columns:
                 if col not in exclude_cols:
@@ -189,12 +195,34 @@ class NFIX7_FreqAI(IStrategy):
     def set_freqai_targets(self, dataframe, metadata, **kwargs):
         """
         Định nghĩa mục tiêu (Label) để AI học.
-        Ví dụ: Dự đoán giá sẽ Tăng hay Giảm sau 20 nến?
+        - Dự đoán hướng giá để vào lệnh (Entry)
+        - Dự đoán tín hiệu thoát lệnh (Exit) dựa trên biến động giá
         """
-        # Classifier: Dự đoán hướng giá (Up/Down)
+        # Target 1: Dự đoán hướng giá (Entry signal)
+        # Giá sau 20 nến cao hơn = "up", thấp hơn = "down"
         dataframe["&s-up_or_down"] = np.where(
             dataframe["close"].shift(-20) > dataframe["close"], "up", "down"
         )
+        
+        # Target 2 & 3: Dự đoán tín hiệu Exit 
+        # Tính min/max của giá trong 10 nến tới bằng cách reverse rolling
+        future_lows = dataframe["low"].iloc[::-1].rolling(10).min().iloc[::-1]
+        future_highs = dataframe["high"].iloc[::-1].rolling(10).max().iloc[::-1]
+        
+        # Tính % thay đổi
+        price_drop_pct = (dataframe["close"] - future_lows) / dataframe["close"] * 100
+        price_gain_pct = (future_highs - dataframe["close"]) / dataframe["close"] * 100
+        
+        # Exit long: giảm > 2% (cắt lỗ) HOẶC tăng > 3% (chốt lời)
+        dataframe["&s-exit_long"] = np.where(
+            (price_drop_pct > 2.0) | (price_gain_pct > 3.0), "exit", "hold"
+        )
+        
+        # Exit short: giá tăng > 2% (cắt lỗ) HOẶC giảm > 3% (chốt lời)
+        dataframe["&s-exit_short"] = np.where(
+            (price_gain_pct > 2.0) | (price_drop_pct > 3.0), "exit", "hold"
+        )
+        
         return dataframe
 
     def populate_indicators(self, dataframe, metadata):
@@ -220,18 +248,58 @@ class NFIX7_FreqAI(IStrategy):
         return dataframe
 
     def populate_exit_trend(self, dataframe, metadata):
-        # Thoát lệnh dựa trên AI
+        # Thoát lệnh dựa trên AI prediction cho Exit signals
         
-        # Exit LONG khi AI dự đoán Giảm
-        dataframe.loc[
-            (dataframe['do_predict'] == 1) &
-            (dataframe['&s-up_or_down'] == 'down'),
-            'exit_long'] = 1
+        # Exit LONG: AI dự đoán nên exit long
+        exit_long_conditions = []
         
-        # Exit SHORT khi AI dự đoán Tăng
-        dataframe.loc[
-            (dataframe['do_predict'] == 1) &
-            (dataframe['&s-up_or_down'] == 'up'),
-            'exit_short'] = 1
+        # Điều kiện chính: AI dự đoán "exit" cho long position
+        if '&s-exit_long' in dataframe.columns:
+            exit_long_conditions.append(
+                (dataframe['do_predict'] == 1) &
+                (dataframe['&s-exit_long'] == 'exit')
+            )
+        
+        # Điều kiện bổ sung: Nếu AI dự đoán giá giảm mạnh (down)
+        if '&s-up_or_down' in dataframe.columns:
+            exit_long_conditions.append(
+                (dataframe['do_predict'] == 1) &
+                (dataframe['&s-up_or_down'] == 'down')
+            )
+        
+        # Combine conditions with OR logic
+        if exit_long_conditions:
+            if len(exit_long_conditions) > 1:
+                exit_long_condition = reduce(operator.or_, exit_long_conditions)
+            else:
+                exit_long_condition = exit_long_conditions[0]
+            
+            dataframe.loc[exit_long_condition, 'exit_long'] = 1
+        
+        # Exit SHORT: AI dự đoán nên exit short
+        exit_short_conditions = []
+        
+        # Điều kiện chính: AI dự đoán "exit" cho short position
+        if '&s-exit_short' in dataframe.columns:
+            exit_short_conditions.append(
+                (dataframe['do_predict'] == 1) &
+                (dataframe['&s-exit_short'] == 'exit')
+            )
+        
+        # Điều kiện bổ sung: Nếu AI dự đoán giá tăng mạnh (up)
+        if '&s-up_or_down' in dataframe.columns:
+            exit_short_conditions.append(
+                (dataframe['do_predict'] == 1) &
+                (dataframe['&s-up_or_down'] == 'up')
+            )
+        
+        # Combine conditions with OR logic
+        if exit_short_conditions:
+            if len(exit_short_conditions) > 1:
+                exit_short_condition = reduce(operator.or_, exit_short_conditions)
+            else:
+                exit_short_condition = exit_short_conditions[0]
+            
+            dataframe.loc[exit_short_condition, 'exit_short'] = 1
                 
         return dataframe
